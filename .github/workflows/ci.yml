@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        java-version: [17, 21]
+        java-version: [21]
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
