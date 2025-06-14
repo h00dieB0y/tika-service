@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -13,6 +13,52 @@
   <packaging>jar</packaging>
 
   <dependencies>
-    <!-- module-specific dependencies go here -->
+    <!-- Spring Web MVC -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Actuator for health, metrics -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+
+    <!-- JSON support -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.module</groupId>
+      <artifactId>jackson-module-parameter-names</artifactId>
+    </dependency>
+
+    <!-- OpenAPI / Swagger UI -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-ui</artifactId>
+    </dependency>
+
+    <!-- Security filters -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+
+    <!-- Project-specific dependencies -->
+    <dependency>
+      <groupId>engineer.mkitsoukou.tika</groupId>
+      <artifactId>tika-application</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>engineer.mkitsoukou.tika</groupId>
+      <artifactId>tika-domain</artifactId>
+    </dependency>
+
+    <!-- Test & docs -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
 </project>
