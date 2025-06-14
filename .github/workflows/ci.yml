@@ -110,9 +110,9 @@ jobs:
           SONAR_TOKEN:       ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL:    https://sonarcloud.io
           SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }} # only for SonarCloud
+          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          mvn --batch-mode sonar:sonar \
+          mvn --batch-mode org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey="$SONAR_PROJECT_KEY" \
             $( [ -n "$SONAR_HOST_URL" ]    && echo "-Dsonar.host.url=$SONAR_HOST_URL" ) \
             $( [ -n "$SONAR_ORGANIZATION" ] && echo "-Dsonar.organization=$SONAR_ORGANIZATION" )
