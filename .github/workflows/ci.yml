@@ -39,6 +39,9 @@ jobs:
           java-version: "21"
           cache: maven
 
+      - name: Install Modules
+        run: ./mvnw -B install -DskipTests
+        
       - name: Static Code Analysis
         run: ./mvnw checkstyle:check pmd:check spotbugs:check
 
