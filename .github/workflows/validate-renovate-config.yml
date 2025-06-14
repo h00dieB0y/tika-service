@@ -1,0 +1,30 @@
+name: Validate Renovate Config
+
+on:
+  push:
+    paths:
+      - 'renovate.json5'
+      - '.github/renovate.json5'
+      - 'renovate.json'
+      - '.renovaterc.json5'
+  pull_request:
+    paths:
+      - 'renovate.json5'
+      - '.github/renovate.json5'
+      - 'renovate.json'
+      - '.renovaterc.json5'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Validate Renovate config
+        run: |
+          npx --yes --package renovate -- renovate-config-validator --strict renovate.json5
