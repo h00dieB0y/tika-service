@@ -1,0 +1,64 @@
+# ----------------------------
+# Maven build outputs
+# ----------------------------
+**/target/
+
+# ----------------------------
+# Environment & Secrets
+# ----------------------------
+.env
+.env.*
+!.env.example
+
+# ----------------------------
+# IDEs & Editors
+# ----------------------------
+# IntelliJ IDEA
+.idea/
+*.iml
+# Eclipse
+.project
+.classpath
+.settings/
+# VS Code
+.vscode/
+
+# ----------------------------
+# OS-specific
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# Logs
+# ----------------------------
+*.log
+**/logs/
+
+# ----------------------------
+# Code coverage reports
+# ----------------------------
+jacoco.exec
+**/jacoco-agent.exec
+**/target/site/jacoco/
+coverage/
+*.lcov
+
+# ----------------------------
+# Sonar
+# ----------------------------
+.sonar/
+.scannerwork/
+
+# ----------------------------
+# Docker
+# ----------------------------
+docker-compose.override.yml
+.docker/
+
+# ----------------------------
+# Temporary & Backup files
+# ----------------------------
+*.tmp
+*~
+*.bak
