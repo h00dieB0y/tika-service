@@ -87,7 +87,9 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: target/site/jacoco/jacoco.xml
+          slug: h00dieB0y/tika-service
 
   sonar-analysis:
     name: SonarQube / SonarCloud
