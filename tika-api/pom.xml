@@ -13,28 +13,25 @@
   <packaging>jar</packaging>
 
   <dependencies>
-    <!-- Spring Web MVC -->
+    <!-- Web & JSON -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-
-    <!-- Actuator for health, metrics -->
+    <!-- Actuator -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
-
-    <!-- JSON support -->
+    <!-- Immutable-DTO support -->
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-parameter-names</artifactId>
     </dependency>
-
-    <!-- OpenAPI / Swagger UI -->
+    <!-- OpenAPI docs/UI -->
     <dependency>
       <groupId>org.springdoc</groupId>
-      <artifactId>springdoc-openapi-ui</artifactId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
     </dependency>
 
     <!-- Security filters -->
@@ -42,8 +39,7 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
-
-    <!-- Project-specific dependencies -->
+    <!-- Wire in application & domain -->
     <dependency>
       <groupId>engineer.mkitsoukou.tika</groupId>
       <artifactId>tika-application</artifactId>
@@ -52,13 +48,27 @@
       <groupId>engineer.mkitsoukou.tika</groupId>
       <artifactId>tika-domain</artifactId>
     </dependency>
-
-    <!-- Test & docs -->
+    <!-- API-level tests -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.junit.vintage</groupId>
+          <artifactId>junit-vintage-engine</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
+
+  <build>
+  <plugins>
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+    </plugin>
+  </plugins>
+</build>
 
 </project>
