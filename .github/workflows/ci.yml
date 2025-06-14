@@ -106,6 +106,7 @@ jobs:
       - name: Run Sonar analysis
         run: mvn sonar:sonar \
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.login=${{ secrets.SONAR_TOKEN }} 
         env:
           MAVEN_OPTS: ${{ env.MAVEN_OPTS }}
