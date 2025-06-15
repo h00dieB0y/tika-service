@@ -12,7 +12,7 @@ on:
           - disabled
           - reset
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 0 * * 0' # Every Sunday at midnight
 
 env:
   cache_archive: renovate_cache.tar.gz
@@ -33,7 +33,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download cache artifact
         if: ${{ github.event.inputs.repoCache != 'disabled' }}
@@ -74,7 +74,7 @@ jobs:
 
       - name: Upload cache artifact
         if: ${{ github.event.inputs.repoCache != 'disabled' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.cache_key }}
           path: ${{ env.cache_archive }}
