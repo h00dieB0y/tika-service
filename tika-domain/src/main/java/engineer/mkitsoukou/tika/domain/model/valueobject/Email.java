@@ -22,10 +22,12 @@ public record Email(
     }
   }
 
+  public static Email of(String email) {
+    return new Email(email);
+  }
+
   @Override
   public String toString() {
     return value;
   }
 }
-
-

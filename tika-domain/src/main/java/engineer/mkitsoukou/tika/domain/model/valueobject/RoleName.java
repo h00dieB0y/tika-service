@@ -22,6 +22,10 @@ public record RoleName(String name) {
     }
   }
 
+  public static RoleName of(String name) {
+    return new RoleName(name);
+  }
+
   @Override
   public String toString() {
     return name;

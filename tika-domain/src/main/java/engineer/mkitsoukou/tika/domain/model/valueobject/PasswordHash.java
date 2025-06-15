@@ -27,6 +27,17 @@ public record PasswordHash(String hash) {
     }
   }
 
+  /**
+   * Factory method to create a PasswordHash instance.
+   *
+   * @param hash the hashed password, must start with "$2"
+   * @return a new PasswordHash instance
+   * @throws InvalidPasswordException if the hash is null or does not start with "$2"
+   */
+  public static PasswordHash of(String hash) {
+    return new PasswordHash(hash);
+  }
+
   @Override
   public String toString() {
     return "[PROTECTED]"; // Masking the hash for security reasons

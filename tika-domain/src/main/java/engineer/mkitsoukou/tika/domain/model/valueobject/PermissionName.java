@@ -31,4 +31,13 @@ public record PermissionName(String name) {
       );
     }
   }
+
+  public static PermissionName of(String name) {
+    return new PermissionName(name);
+  }
+
+  @Override
+  public String toString() {
+    return name;
+  }
 }

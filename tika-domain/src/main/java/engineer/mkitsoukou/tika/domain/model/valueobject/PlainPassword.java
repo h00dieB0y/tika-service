@@ -48,6 +48,10 @@ public record PlainPassword(String clearText) {
     }
   }
 
+  public static PlainPassword of(String password) {
+    return new PlainPassword(password);
+  }
+
   @Override
   public String toString() {
     return clearText;
