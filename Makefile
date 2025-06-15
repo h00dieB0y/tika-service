@@ -142,7 +142,7 @@ check-requirements: ## Verify Docker, Docker Compose & Java are installed
 	@command -v docker >/dev/null 2>&1 || { \
 		echo "${YELLOW}Docker not found.${RESET}"; exit 1; }
 	@command -v $(DC) >/dev/null 2>&1 || { \
-		echo "${YELLOW}‘$(DC)’ not found.${RESET}"; exit 1; }
+		echo "${YELLOW}'$(DC)' not found.${RESET}"; exit 1; }
 	@command -v java >/dev/null 2>&1 || { \
 		echo "${YELLOW}Java not found.${RESET}"; exit 1; }
 	@echo "${GREEN}All tools are present.${RESET}"

@@ -28,7 +28,7 @@ jobs:
       - name: Find Dockerfiles
         id: find-dockerfiles
         run: |
-          echo "DOCKERFILES=$(find . -name "Dockerfile" -o -name "*.dockerfile" | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          echo "DOCKERFILES=$(find . -name 'Dockerfile' -o -name '*.dockerfile' | tr '\n' ' ')" >> $GITHUB_OUTPUT
           
       - name: Lint Dockerfiles with Hadolint
         uses: hadolint/hadolint-action@v3.1.0
