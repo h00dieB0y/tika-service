@@ -19,6 +19,24 @@ env:
   MAVEN_OPTS: -Xmx2g -XX:+UseContainerSupport
 
 jobs:
+  docker-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Find Dockerfiles
+        id: find-dockerfiles
+        run: |
+          echo "DOCKERFILES=$(find . -name 'Dockerfile' -o -name '*.dockerfile' | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          
+      - name: Lint Dockerfiles with Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        if: ${{ steps.find-dockerfiles.outputs.DOCKERFILES != '' }}
+        with:
+          dockerfile: ${{ steps.find-dockerfiles.outputs.DOCKERFILES }}
+          failure-threshold: error
+
   build-and-test:
     runs-on: ubuntu-latest
     strategy:
