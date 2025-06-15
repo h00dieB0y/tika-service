@@ -1,7 +1,5 @@
 package engineer.mkitsoukou.tika.domain.model.valueobject;
 
-import engineer.mkitsoukou.tika.domain.exception.InvalidPermissionNameException;
-import engineer.mkitsoukou.tika.domain.exception.InvalidRoleIdException;
 import engineer.mkitsoukou.tika.domain.exception.InvalidRoleNameException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
