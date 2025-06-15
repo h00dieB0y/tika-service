@@ -5,7 +5,9 @@ import java.util.regex.Pattern;
 
 public record RoleName(String name) {
 
-  private static final Pattern PATTERN = Pattern.compile("^(?:ROLE_)?[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)*$");
+  private static final Pattern PATTERN =     Pattern.compile(
+      "^(?>ROLE_)?(?>[A-Z][A-Z0-9]*)(?:_(?>[A-Z0-9]+))*$"
+  );
   private static final int MAX_LENGTH = 100;
 
   public RoleName {

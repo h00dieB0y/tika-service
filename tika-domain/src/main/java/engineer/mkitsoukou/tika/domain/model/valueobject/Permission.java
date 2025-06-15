@@ -6,7 +6,8 @@ import java.util.regex.Pattern;
 public record Permission(String value) {
 
   private static final Pattern PERMISSION_PATTERN = Pattern.compile(
-      "^[a-z][a-z0-9-]*(?:\\.[a-z][a-z0-9-]*)+$");
+      "^(?>[a-z][a-z0-9-]*)(?:\\.(?>[a-z][a-z0-9-]*))+$"
+  );
 
   public Permission {
     if (value == null || value.isBlank()) {
