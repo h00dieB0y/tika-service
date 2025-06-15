@@ -1,6 +1,8 @@
 package engineer.mkitsoukou.tika.domain.model.valueobject;
 
 import engineer.mkitsoukou.tika.domain.exception.InvalidPermissionNameException;
+import engineer.mkitsoukou.tika.domain.exception.InvalidRoleIdException;
+import engineer.mkitsoukou.tika.domain.exception.InvalidRoleNameException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,44 +42,44 @@ public class RoleNameTest {
     @Test
     @DisplayName("Throws exception when role name is null")
     void throwsExceptionWhenRoleNameIsNull() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName(null));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName(null));
     }
 
     @Test
     @DisplayName("Throws exception when role name is blank")
     void throwsExceptionWhenRoleNameIsBlank() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName("   "));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName("   "));
     }
 
     @Test
     @DisplayName("Throws exception when role name exceeds 100 characters")
     void throwsExceptionWhenRoleNameExceedsMaxLength() {
       String invalidName = "ROLE_" + "A".repeat(96);
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName(invalidName));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName(invalidName));
     }
 
     @Test
     @DisplayName("Throws exception when role name contains invalid characters")
     void throwsExceptionWhenRoleNameContainsInvalidCharacters() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName("ROLE_ADMIN!"));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName("ROLE_ADMIN!"));
     }
 
     @Test
     @DisplayName("Throws exception when role name does not start with an uppercase letter")
     void throwsExceptionWhenRoleNameDoesNotStartWithUppercase() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName("role_admin"));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName("role_admin"));
     }
 
     @Test
     @DisplayName("Throws exception when role name has consecutive underscores")
     void throwsExceptionWhenRoleNameHasConsecutiveUnderscores() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName("ROLE__ADMIN"));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName("ROLE__ADMIN"));
     }
 
     @Test
     @DisplayName("Throws exception when role name ends with an underscore")
     void throwsExceptionWhenRoleNameEndsWithUnderscore() {
-      assertThrows(InvalidPermissionNameException.class, () -> new RoleName("ROLE_ADMIN_"));
+      assertThrows(InvalidRoleNameException.class, () -> new RoleName("ROLE_ADMIN_"));
     }
   }
 }

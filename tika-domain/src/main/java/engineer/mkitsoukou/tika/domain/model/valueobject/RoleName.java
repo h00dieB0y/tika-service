@@ -1,6 +1,6 @@
 package engineer.mkitsoukou.tika.domain.model.valueobject;
 
-import engineer.mkitsoukou.tika.domain.exception.InvalidPermissionNameException;
+import engineer.mkitsoukou.tika.domain.exception.InvalidRoleNameException;
 import java.util.regex.Pattern;
 
 public record RoleName(String name) {
@@ -10,15 +10,15 @@ public record RoleName(String name) {
 
   public RoleName {
     if (name == null || name.isBlank()) {
-      throw new InvalidPermissionNameException(name, new IllegalArgumentException("Role name must not be null or blank"));
+      throw new InvalidRoleNameException(name, new IllegalArgumentException("Role name must not be null or blank"));
     }
 
     if (name.length() > MAX_LENGTH) {
-      throw new InvalidPermissionNameException(name, new IllegalArgumentException("Role name must not exceed " + MAX_LENGTH + " characters"));
+      throw new InvalidRoleNameException(name, new IllegalArgumentException("Role name must not exceed " + MAX_LENGTH + " characters"));
     }
 
     if (!PATTERN.matcher(name).matches()) {
-      throw new InvalidPermissionNameException(name, new IllegalArgumentException("must be a valid role name format"));
+      throw new InvalidRoleNameException(name, new IllegalArgumentException("must be a valid role name format"));
     }
   }
 
