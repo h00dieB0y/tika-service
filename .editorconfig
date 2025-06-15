@@ -1,0 +1,83 @@
+# top-most EditorConfig file
+root = true
+
+#
+# 1) Base settings for all files
+#
+[*]
+charset                  = utf-8
+end_of_line              = lf
+insert_final_newline     = true
+trim_trailing_whitespace = true
+
+#
+# 2) Allow Markdown lists to have trailing spaces
+#
+[*.md]
+trim_trailing_whitespace = false
+
+#
+# 3) Google Java Style (2-space indents, LF, UTF-8)
+#
+[*.java]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 4) XML (e.g. Spring config, pom.xml) → 2 spaces
+#
+[*.xml]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 5) YAML (application.yml, docker-compose.yml) → 2 spaces
+#
+[*.yml]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+[*.yaml]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 6) Dockerfiles → 2 spaces
+#
+[Dockerfile]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 7) Shell scripts (entrypoint.sh, *.sh) → 2 spaces
+#
+[*.sh]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 8) Gradle (Groovy/Kotlin DSL) → 2 spaces
+#
+[*.gradle]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+#
+# 9) Properties & JSON → 2 spaces
+#
+[*.properties]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
+
+[*.json]
+indent_style = space
+indent_size  = 2
+tab_width    = 2
