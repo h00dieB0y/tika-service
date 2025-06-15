@@ -108,27 +108,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: target/site/jacoco/jacoco.xml
           slug: h00dieB0y/tika-service
-
-  sonar-analysis:
-    name: SonarQube / SonarCloud
-    needs: upload-coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Run SonarQube analysis
-        env:
-          SONAR_TOKEN:       ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL:    https://sonarcloud.io
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
-        run: |
-          mvn --batch-mode org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey="$SONAR_PROJECT_KEY"
