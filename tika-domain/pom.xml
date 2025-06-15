@@ -13,12 +13,6 @@
   <packaging>jar</packaging>
 
   <dependencies>
-    <!-- Bean Validation for invariants-->
-    <dependency>
-      <groupId>jakarta.validation</groupId>
-      <artifactId>jakarta.validation-api</artifactId>
-    </dependency>
-
     <!-- Tests helpers-->
      <dependency>
       <groupId>org.junit.jupiter</groupId>
