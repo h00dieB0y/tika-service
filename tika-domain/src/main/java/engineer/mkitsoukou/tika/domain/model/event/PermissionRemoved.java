@@ -36,13 +36,12 @@ public class PermissionRemoved implements DomainEvent {
     if (o == null || getClass() != o.getClass()) return false;
     PermissionRemoved that = (PermissionRemoved) o;
     return Objects.equals(roleId, that.roleId)
-        && Objects.equals(permission, that.permission)
-        && Objects.equals(occurredAt, that.occurredAt);
+        && Objects.equals(permission, that.permission);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(roleId, permission, occurredAt);
+    return Objects.hash(roleId, permission);
   }
 
   @Override

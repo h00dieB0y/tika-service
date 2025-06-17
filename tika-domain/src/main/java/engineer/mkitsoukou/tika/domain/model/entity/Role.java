@@ -23,6 +23,12 @@ public final class Role {
     this.permissions = new HashSet<>(permissions);
   }
 
+  public static Role of(RoleName roleName, Set<Permission> permissions) {
+    if (roleName == null) throw new IllegalArgumentException("roleName cannot be null");
+    if (permissions == null) throw new IllegalArgumentException("permissions cannot be null");
+    return new Role(RoleId.of(UUID.randomUUID()), roleName, permissions);
+  }
+
   public RoleId getRoleId() {
     return roleId;
   }
