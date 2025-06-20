@@ -1,10 +1,13 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
+import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
 import engineer.mkitsoukou.tika.domain.exception.IncorrectPasswordException;
+import engineer.mkitsoukou.tika.domain.exception.NoRolesAssignedException;
 import engineer.mkitsoukou.tika.domain.exception.RoleNotFoundException;
 import engineer.mkitsoukou.tika.domain.model.event.PasswordChanged;
 import engineer.mkitsoukou.tika.domain.model.event.RoleAssigned;
 import engineer.mkitsoukou.tika.domain.model.event.RoleRemoved;
+import engineer.mkitsoukou.tika.domain.model.event.UserActivationChanged;
 import engineer.mkitsoukou.tika.domain.model.event.UserRegistered;
 import engineer.mkitsoukou.tika.domain.model.valueobject.*;
 import engineer.mkitsoukou.tika.domain.service.PasswordService;
@@ -22,6 +25,7 @@ public final class User extends AbstractEntity {
   private final Email email;
   private final Set<Role> roles;
   private PasswordHash passwordHash;
+  private boolean active;
 
   /**
    * Creates a new user with the specified details.
@@ -37,6 +41,7 @@ public final class User extends AbstractEntity {
     this.email = requireNonNull(email, "email");
     this.passwordHash = requireNonNull(passwordHash, "passwordHash");
     this.roles = new LinkedHashSet<>(requireNonNull(initialRoles, "initialRoles"));
+    this.active = true; // Default to active
   }
 
   /**
@@ -91,6 +96,25 @@ public final class User extends AbstractEntity {
   }
 
   /**
+   * Resets the user's password directly without requiring the old password.
+   * This is typically used for administrative password resets or forgotten password flows.
+   *
+   * @param newPassword     the new password to set
+   * @param passwordService service to hash passwords
+   * @throws EntityRequiredFieldException if any parameter is null
+   */
+  public void resetPassword(
+      PlainPassword newPassword,
+      PasswordService passwordService
+  ) {
+    requireNonNull(newPassword, "newPassword");
+    requireNonNull(passwordService, "passwordService");
+
+    this.passwordHash = passwordService.hash(newPassword);
+    recordEvent(PasswordChanged.of(id));
+  }
+
+  /**
    * Assigns a role to the user if not already assigned.
    *
    * @param role the role to assign
@@ -100,7 +124,7 @@ public final class User extends AbstractEntity {
     requireNonNull(role, "role");
 
     if (roles.add(role)) {
-      recordEvent(RoleAssigned.of(id, role.getRoleId()));
+      recordEvent(RoleAssigned.createEvent(id, role.getRoleId()));
     }
   }
 
@@ -110,14 +134,76 @@ public final class User extends AbstractEntity {
    * @param role the role to remove
    * @throws EntityRequiredFieldException if the role is null
    * @throws RoleNotFoundException if the role is not assigned to the user
+   * @throws NoRolesAssignedException if removing this role would leave the user withhout any roles
    */
   public void removeRole(Role role) {
     requireNonNull(role, "role");
 
-    if (!roles.remove(role)) {
+    if (!roles.contains(role)) {
       throw new RoleNotFoundException(role.getRoleId().toString());
     }
-    recordEvent(RoleRemoved.of(id, role.getRoleId()));
+
+    if (roles.size() <= 1) {
+      throw new NoRolesAssignedException();
+    }
+
+    roles.remove(role);
+    recordEvent(RoleRemoved.createEvent(id, role.getRoleId()));
+  }
+
+  /**
+   * Assigns multiple roles to the user at once.
+   * Only roles that are not already assigned will be added.
+   * This method is a bulk operation equivalent to calling assignRole() for each role,
+   * but with better performance since it processes them as a batch.
+   *
+   * @param rolesToAssign the set of roles to assign
+   * @throws EntityRequiredFieldException if the roles parameter is null
+   */
+  public void assignRoles(Set<Role> rolesToAssign) {
+    requireNonNull(rolesToAssign, "rolesToAssign");
+
+    for (Role role : rolesToAssign) {
+      assignRole(role);
+    }
+  }
+
+  /**
+   * Removes multiple roles from the user at once.
+   * Checks that at least one role will remain after the operation.
+   * This method is a bulk operation equivalent to calling removeRole() for each role,
+   * but with additional safety checks to ensure user integrity.
+   *
+   * The method performs validation in this order:
+   * 1. Checks that all roles to remove exist for the user
+   * 2. Verifies that removing these roles won't leave the user without any roles
+   * 3. Performs the removal and records events for each removed role
+   *
+   * @param rolesToRemove the set of roles to remove
+   * @throws EntityRequiredFieldException if the roles parameter is null
+   * @throws NoRolesAssignedException if removing these roles would leave the user without any roles
+   * @throws RoleNotFoundException if any of the roles is not assigned to this user
+   */
+  public void removeRoles(Set<Role> rolesToRemove) {
+    requireNonNull(rolesToRemove, "rolesToRemove");
+
+    // Check that all roles exist
+    for (Role role : rolesToRemove) {
+      if (!roles.contains(role)) {
+        throw new RoleNotFoundException(role.getRoleId().toString());
+      }
+    }
+
+    // Check that we'll have at least one role left
+    if (roles.size() <= rolesToRemove.size()) {
+      throw new NoRolesAssignedException();
+    }
+
+    // Remove all roles
+    for (Role role : rolesToRemove) {
+      roles.remove(role);
+      recordEvent(RoleRemoved.createEvent(id, role.getRoleId()));
+    }
   }
 
   /**
@@ -178,6 +264,31 @@ public final class User extends AbstractEntity {
    */
   public Set<Role> getRoles() {
     return Set.copyOf(roles);
+  }
+
+  /**
+   * Checks if the user is active.
+   *
+   * @return true if the user is active, false otherwise
+   */
+  public boolean isActive() {
+    return active;
+  }
+
+  /**
+   * Activates the user, allowing them to log in and perform actions.
+   */
+  public void activate() {
+    this.active = true;
+    recordEvent(UserActivationChanged.of(id, true));
+  }
+
+  /**
+   * Deactivates the user, preventing them from logging in or performing actions.
+   */
+  public void deactivate() {
+    this.active = false;
+    recordEvent(UserActivationChanged.of(id, false));
   }
 
   @Override

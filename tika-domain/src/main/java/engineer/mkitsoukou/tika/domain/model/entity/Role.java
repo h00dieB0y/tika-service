@@ -1,6 +1,8 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
+import engineer.mkitsoukou.tika.domain.exception.EmptyRoleException;
 import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
+import engineer.mkitsoukou.tika.domain.exception.PermissionNotFoundException;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionAdded;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
@@ -28,11 +30,16 @@ public final class Role extends AbstractEntity {
    * @param roleName    the name of the role
    * @param permissions the initial set of permissions for this role
    * @throws EntityRequiredFieldException if any parameter is null
+   * @throws EmptyRoleException if permissions set is empty
    */
   private Role(RoleId roleId, RoleName roleName, Set<Permission> permissions) {
     this.roleId = requireNonNull(roleId, "roleId");
     this.roleName = requireNonNull(roleName, "roleName");
     this.permissions = new HashSet<>(requireNonNull(permissions, "permissions"));
+
+    if (this.permissions.isEmpty()) {
+      throw new EmptyRoleException();
+    }
   }
 
   /**
@@ -42,8 +49,9 @@ public final class Role extends AbstractEntity {
    * @param permissions the initial set of permissions for this role
    * @return a new Role instance
    * @throws EntityRequiredFieldException if any parameter is null
+   * @throws EmptyRoleException if permissions set is empty
    */
-  public static Role of(RoleName roleName, Set<Permission> permissions) {
+  public static Role createRole(RoleName roleName, Set<Permission> permissions) {
     return new Role(RoleId.generate(), roleName, permissions);
   }
 
@@ -85,22 +93,85 @@ public final class Role extends AbstractEntity {
     requireNonNull(permission, "permission");
 
     if (permissions.add(permission)) {
-      recordEvent(PermissionAdded.of(roleId, permission));
+      recordEvent(PermissionAdded.createEvent(roleId, permission));
     }
   }
 
   /**
    * Removes a permission from this role.
-   * If the permission is not assigned, no action is taken.
    *
    * @param permission the permission to remove
    * @throws EntityRequiredFieldException if the permission is null
+   * @throws EmptyRoleException if removing this permission would leave the role with no permissions
+   * @throws PermissionNotFoundException if the permission is not assigned to this role
    */
   public void removePermission(Permission permission) {
     requireNonNull(permission, "permission");
 
-    if (permissions.remove(permission)) {
-      recordEvent(PermissionRemoved.of(roleId, permission));
+    if (!permissions.contains(permission)) {
+      throw new PermissionNotFoundException(permission.toString());
+    }
+
+    if (permissions.size() <= 1) {
+      throw new EmptyRoleException();
+    }
+
+    permissions.remove(permission);
+    recordEvent(PermissionRemoved.createEvent(roleId, permission));
+  }
+
+  /**
+   * Adds multiple permissions to this role at once.
+   * Only permissions that are not already assigned will be added.
+   * This method is a bulk operation equivalent to calling addPermission() for each permission,
+   * but with better performance since it processes them as a batch.
+   *
+   * @param permissions the set of permissions to add
+   * @throws EntityRequiredFieldException if the permissions parameter is null
+   * @throws EmptyRoleException if permissions set is empty
+   */
+  public void addPermissions(Set<Permission> permissions) {
+    requireNonNull(permissions, "permissions");
+
+    for (Permission permission : permissions) {
+      addPermission(permission);
+    }
+  }
+
+  /**
+   * Removes multiple permissions from this role at once.
+   * Checks that at least one permission will remain after the operation.
+   * This method is a bulk operation equivalent to calling removePermission() for each permission,
+   * but with additional safety checks to ensure role integrity.
+   *
+   * The method performs validation in this order:
+   * 1. Checks that all permissions to remove exist in the role
+   * 2. Verifies that removing these permissions won't leave the role empty
+   * 3. Performs the removal and records events for each removed permission
+   *
+   * @param permissions the set of permissions to remove
+   * @throws EntityRequiredFieldException if the permissions parameter is null
+   * @throws EmptyRoleException if removing these permissions would leave the role with no permissions
+   * @throws PermissionNotFoundException if any of the permissions is not assigned to this role
+   */
+  public void removePermissions(Set<Permission> permissions) {
+    requireNonNull(permissions, "permissions");
+
+    // Check that all permissions exist
+    for (Permission permission : permissions) {
+      if (!this.permissions.contains(permission)) {
+        throw new PermissionNotFoundException(permission.toString());
+      }
+    }
+
+    // Check that we'll have at least one permission left
+    if (this.permissions.size() <= permissions.size()) {
+      throw new EmptyRoleException();
+    }
+
+    // Remove all permissions
+    for (Permission permission : permissions) {
+      removePermission(permission);
     }
   }
 

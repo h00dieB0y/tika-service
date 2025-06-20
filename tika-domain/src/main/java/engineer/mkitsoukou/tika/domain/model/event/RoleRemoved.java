@@ -23,7 +23,7 @@ public class RoleRemoved extends AbstractDomainEvent {
    * @param roleId the ID of the role that was removed
    * @return a new RoleRemoved event
    */
-  public static RoleRemoved of(UserId userId, RoleId roleId) {
+  public static RoleRemoved createEvent(UserId userId, RoleId roleId) {
     return new RoleRemoved(userId, roleId);
   }
 

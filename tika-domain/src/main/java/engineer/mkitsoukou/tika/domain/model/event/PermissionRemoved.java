@@ -22,7 +22,7 @@ public class PermissionRemoved extends AbstractDomainEvent {
    * @param permission the permission that was removed
    * @return a new PermissionRemoved event
    */
-  public static PermissionRemoved of(RoleId roleId, Permission permission) {
+  public static PermissionRemoved createEvent(RoleId roleId, Permission permission) {
     return new PermissionRemoved(roleId, permission);
   }
 

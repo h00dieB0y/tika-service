@@ -22,7 +22,7 @@ public class RoleAssigned extends AbstractDomainEvent {
    * @param roleId the ID of the role that was assigned
    * @return a new RoleAssigned event
    */
-  public static RoleAssigned of(UserId userId, RoleId roleId) {
+  public static RoleAssigned createEvent(UserId userId, RoleId roleId) {
     return new RoleAssigned(userId, roleId);
   }
 

@@ -22,7 +22,7 @@ public class PermissionAdded extends AbstractDomainEvent {
    * @param permission the permission that was added
    * @return a new PermissionAdded event
    */
-  public static PermissionAdded of(RoleId roleId, Permission permission) {
+  public static PermissionAdded createEvent(RoleId roleId, Permission permission) {
     return new PermissionAdded(roleId, permission);
   }
 
