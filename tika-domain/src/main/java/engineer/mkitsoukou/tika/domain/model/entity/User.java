@@ -134,7 +134,7 @@ public final class User extends AbstractEntity {
    * @param role the role to remove
    * @throws EntityRequiredFieldException if the role is null
    * @throws RoleNotFoundException if the role is not assigned to the user
-   * @throws NoRolesAssignedException if removing this role would leave the user withhout any roles
+   * @throws NoRolesAssignedException if removing this role would leave the user without any roles
    */
   public void removeRole(Role role) {
     requireNonNull(role, "role");
