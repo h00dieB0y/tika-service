@@ -9,7 +9,11 @@ import engineer.mkitsoukou.tika.domain.model.event.RoleAssigned;
 import engineer.mkitsoukou.tika.domain.model.event.RoleRemoved;
 import engineer.mkitsoukou.tika.domain.model.event.UserActivationChanged;
 import engineer.mkitsoukou.tika.domain.model.event.UserRegistered;
-import engineer.mkitsoukou.tika.domain.model.valueobject.*;
+import engineer.mkitsoukou.tika.domain.model.valueobject.Email;
+import engineer.mkitsoukou.tika.domain.model.valueobject.PasswordHash;
+import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
+import engineer.mkitsoukou.tika.domain.model.valueobject.PlainPassword;
+import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 import engineer.mkitsoukou.tika.domain.service.PasswordService;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -143,7 +147,7 @@ public final class User extends AbstractEntity {
       throw new RoleNotFoundException(role.getRoleId().toString());
     }
 
-    if (roles.size() <= 1) {
+    if (roles.size() == 1) {
       throw new NoRolesAssignedException();
     }
 
@@ -174,12 +178,14 @@ public final class User extends AbstractEntity {
    * This method is a bulk operation equivalent to calling removeRole() for each role,
    * but with additional safety checks to ensure user integrity.
    *
-   * The method performs validation in this order:
+   * <p>The method performs validation in this order:
    * 1. Checks that all roles to remove exist for the user
    * 2. Verifies that removing these roles won't leave the user without any roles
    * 3. Performs the removal and records events for each removed role
+   *</p>
    *
    * @param rolesToRemove the set of roles to remove
+   *
    * @throws EntityRequiredFieldException if the roles parameter is null
    * @throws NoRolesAssignedException if removing these roles would leave the user without any roles
    * @throws RoleNotFoundException if any of the roles is not assigned to this user
