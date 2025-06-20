@@ -112,7 +112,7 @@ public final class Role extends AbstractEntity {
       throw new PermissionNotFoundException(permission.toString());
     }
 
-    if (permissions.size() <= 1) {
+    if (permissions.size() == 1) {
       throw new EmptyRoleException();
     }
 
@@ -144,12 +144,14 @@ public final class Role extends AbstractEntity {
    * This method is a bulk operation equivalent to calling removePermission() for each permission,
    * but with additional safety checks to ensure role integrity.
    *
-   * The method performs validation in this order:
+   * <p>The method performs validation in this order:
    * 1. Checks that all permissions to remove exist in the role
    * 2. Verifies that removing these permissions won't leave the role empty
    * 3. Performs the removal and records events for each removed permission
+   *</p>
    *
    * @param permissions the set of permissions to remove
+   *
    * @throws EntityRequiredFieldException if the permissions parameter is null
    * @throws EmptyRoleException if removing these permissions would leave the role with no permissions
    * @throws PermissionNotFoundException if any of the permissions is not assigned to this role
