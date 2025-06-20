@@ -2,24 +2,28 @@ package engineer.mkitsoukou.tika.domain.model.event;
 
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
-import java.time.Instant;
 import java.util.Objects;
 
-public class PermissionAdded implements DomainEvent {
+public class PermissionAdded extends AbstractDomainEvent {
 
   private final RoleId roleId;
   private final Permission permission;
-  private final Instant occurredAt;
 
   public PermissionAdded(RoleId roleId, Permission permission) {
-    this.roleId = Objects.requireNonNull(roleId, "roleId cannot be null");
-    this.permission = Objects.requireNonNull(permission, "permission cannot be null");
-    this.occurredAt = Instant.now();
+    super();
+    this.roleId = requireNonNull(roleId, "roleId");
+    this.permission = requireNonNull(permission, "permission");
   }
 
-  @Override
-  public Instant occurredAt() {
-    return occurredAt;
+  /**
+   * Creates a new PermissionAdded event.
+   *
+   * @param roleId the ID of the role to which the permission was added
+   * @param permission the permission that was added
+   * @return a new PermissionAdded event
+   */
+  public static PermissionAdded of(RoleId roleId, Permission permission) {
+    return new PermissionAdded(roleId, permission);
   }
 
   public RoleId getRoleId() {
@@ -49,11 +53,7 @@ public class PermissionAdded implements DomainEvent {
     return "PermissionAdded{"
         + "roleId=" + roleId
         + ", permission=" + permission
-        + ", occurredAt=" + occurredAt
+        + ", occurredAt=" + occurredAt()
         + '}';
-  }
-
-  public static PermissionAdded of(RoleId roleId, Permission permission) {
-    return new PermissionAdded(roleId, permission);
   }
 }

@@ -3,28 +3,28 @@ package engineer.mkitsoukou.tika.domain.model.event;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Email;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 
-import java.time.Instant;
 import java.util.Objects;
 
-public class UserRegistered implements DomainEvent {
+public class UserRegistered extends AbstractDomainEvent {
 
   private final UserId userId;
   private final Email email;
-  private final Instant occurredAt;
 
   public UserRegistered(UserId userId, Email email) {
-    this.userId = Objects.requireNonNull(userId, "userId must not be null");
-    this.email = Objects.requireNonNull(email, "email must not be null");
-    this.occurredAt = Instant.now();
+    super();
+    this.userId = requireNonNull(userId, "userId");
+    this.email = requireNonNull(email, "email");
   }
 
+  /**
+   * Creates a new UserRegistered event.
+   *
+   * @param userId the ID of the user that was registered
+   * @param email the email of the registered user
+   * @return a new UserRegistered event
+   */
   public static UserRegistered of(UserId userId, Email email) {
     return new UserRegistered(userId, email);
-  }
-
-  @Override
-  public Instant occurredAt() {
-    return occurredAt;
   }
 
   public UserId getUserId() {
@@ -55,7 +55,7 @@ public class UserRegistered implements DomainEvent {
     return "UserRegistered{"
         + "userId=" + userId
         + ", email=" + email
-        + ", occurredAt=" + occurredAt
+        + ", occurredAt=" + occurredAt()
         + '}';
   }
 }

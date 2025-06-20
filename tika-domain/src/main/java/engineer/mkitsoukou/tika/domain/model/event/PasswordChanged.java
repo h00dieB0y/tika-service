@@ -2,25 +2,24 @@ package engineer.mkitsoukou.tika.domain.model.event;
 
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 
-import java.time.Instant;
 import java.util.Objects;
 
-public class PasswordChanged implements  DomainEvent {
+public class PasswordChanged extends AbstractDomainEvent {
   private final UserId userId;
-  private final Instant occurredAt;
 
   public PasswordChanged(UserId userId) {
-    this.userId = Objects.requireNonNull(userId, "userId must not be null");
-    this.occurredAt = Instant.now();
+    super();
+    this.userId = requireNonNull(userId, "userId");
   }
 
+  /**
+   * Creates a new PasswordChanged event.
+   *
+   * @param userId the ID of the user whose password was changed
+   * @return a new PasswordChanged event
+   */
   public static PasswordChanged of(UserId userId) {
     return new PasswordChanged(userId);
-  }
-
-  @Override
-  public Instant occurredAt() {
-    return occurredAt;
   }
 
   public UserId getUserId() {
@@ -45,7 +44,7 @@ public class PasswordChanged implements  DomainEvent {
   public String toString() {
     return "PasswordChanged{"
         + "userId=" + userId
-        + ", occurredAt=" + occurredAt
+        + ", occurredAt=" + occurredAt()
         + '}';
   }
 }

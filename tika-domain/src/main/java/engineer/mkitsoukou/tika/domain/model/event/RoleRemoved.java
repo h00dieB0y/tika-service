@@ -3,28 +3,28 @@ package engineer.mkitsoukou.tika.domain.model.event;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 
-import java.time.Instant;
 import java.util.Objects;
 
-public class RoleRemoved implements DomainEvent {
+public class RoleRemoved extends AbstractDomainEvent {
 
   private final UserId userId;
   private final RoleId roleId;
-  private final Instant occurredAt;
 
   public RoleRemoved(UserId userId, RoleId roleId) {
-    this.userId = Objects.requireNonNull(userId, "userId must not be null");
-    this.roleId = Objects.requireNonNull(roleId, "roleId must not be null");
-    this.occurredAt = Instant.now();
+    super();
+    this.userId = requireNonNull(userId, "userId");
+    this.roleId = requireNonNull(roleId, "roleId");
   }
 
+  /**
+   * Creates a new RoleRemoved event.
+   *
+   * @param userId the ID of the user from which the role was removed
+   * @param roleId the ID of the role that was removed
+   * @return a new RoleRemoved event
+   */
   public static RoleRemoved of(UserId userId, RoleId roleId) {
     return new RoleRemoved(userId, roleId);
-  }
-
-  @Override
-  public Instant occurredAt() {
-    return occurredAt;
   }
 
   public UserId getUserId() {
@@ -55,7 +55,7 @@ public class RoleRemoved implements DomainEvent {
     return "RoleRemoved{"
         + "roleId=" + roleId
         + ", userId=" + userId
-        + ", occurredAt=" + occurredAt
+        + ", occurredAt=" + occurredAt()
         + '}';
   }
 }

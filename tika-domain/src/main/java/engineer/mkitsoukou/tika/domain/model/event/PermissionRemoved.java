@@ -2,24 +2,28 @@ package engineer.mkitsoukou.tika.domain.model.event;
 
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
-import java.time.Instant;
 import java.util.Objects;
 
-public class PermissionRemoved implements DomainEvent {
+public class PermissionRemoved extends AbstractDomainEvent {
 
   private final RoleId roleId;
   private final Permission permission;
-  private final Instant occurredAt;
 
   public PermissionRemoved(RoleId roleId, Permission permission) {
-    this.roleId = Objects.requireNonNull(roleId, "roleId cannot be null");
-    this.permission = Objects.requireNonNull(permission, "permission cannot be null");
-    this.occurredAt = Instant.now();
+    super();
+    this.roleId = requireNonNull(roleId, "roleId");
+    this.permission = requireNonNull(permission, "permission");
   }
 
-  @Override
-  public Instant occurredAt() {
-    return occurredAt;
+  /**
+   * Creates a new PermissionRemoved event.
+   *
+   * @param roleId the ID of the role from which the permission was removed
+   * @param permission the permission that was removed
+   * @return a new PermissionRemoved event
+   */
+  public static PermissionRemoved of(RoleId roleId, Permission permission) {
+    return new PermissionRemoved(roleId, permission);
   }
 
   public RoleId getRoleId() {
@@ -49,11 +53,7 @@ public class PermissionRemoved implements DomainEvent {
     return "PermissionRemoved{"
         + "roleId=" + roleId
         + ", permission=" + permission
-        + ", occurredAt=" + occurredAt
+        + ", occurredAt=" + occurredAt()
         + '}';
-  }
-
-  public static PermissionRemoved of(RoleId roleId, Permission permission) {
-    return new PermissionRemoved(roleId, permission);
   }
 }
