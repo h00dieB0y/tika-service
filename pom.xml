@@ -39,7 +39,13 @@
     <sonar.organization>h00dieb0y</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.coverage.jacoco.xmlReportPaths>
-      ${project.build.directory}/site/jacoco/jacoco.xml
+      target/site/jacoco/jacoco.xml,
+      tika-api/target/site/jacoco/jacoco.xml,
+      tika-application/target/site/jacoco/jacoco.xml,
+      tika-domain/target/site/jacoco/jacoco.xml,
+      tika-infrastructure/target/site/jacoco/jacoco.xml,
+      tika-security/target/site/jacoco/jacoco.xml,
+      tika-shared/target/site/jacoco/jacoco.xml
     </sonar.coverage.jacoco.xmlReportPaths>
   </properties>
 
