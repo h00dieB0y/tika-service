@@ -3,10 +3,8 @@ package engineer.mkitsoukou.tika.domain.model.entity;
 import engineer.mkitsoukou.tika.domain.exception.DomainEventException;
 import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
 import engineer.mkitsoukou.tika.domain.model.event.DomainEvent;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Base class for all domain entities that need to track and publish domain events.
