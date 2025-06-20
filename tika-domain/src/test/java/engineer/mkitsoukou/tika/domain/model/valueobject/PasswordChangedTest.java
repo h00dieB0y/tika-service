@@ -23,7 +23,7 @@ class PasswordChangedTest {
     UserId userId = UserId.of(UUID.randomUUID());
 
     PasswordChanged e1 = new PasswordChanged(userId);
-    PasswordChanged e2 = PasswordChanged.of(userId);
+    PasswordChanged e2 = PasswordChanged.createEvent(userId);
 
     assertEquals(e1.getUserId(), e2.getUserId());
   }

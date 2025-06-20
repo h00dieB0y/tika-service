@@ -23,7 +23,7 @@ public class UserActivationChanged extends AbstractDomainEvent {
    * @param isActive the new activation status
    * @return a new UserActivationChanged event
    */
-  public static UserActivationChanged of(UserId userId, boolean isActive) {
+  public static UserActivationChanged createEvent(UserId userId, boolean isActive) {
     return new UserActivationChanged(userId, isActive);
   }
 

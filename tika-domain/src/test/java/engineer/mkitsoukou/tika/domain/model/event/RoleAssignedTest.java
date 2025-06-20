@@ -28,7 +28,7 @@ class RoleAssignedTest {
     RoleId roleId = RoleId.of(UUID.randomUUID());
 
     RoleAssigned e1 = new RoleAssigned(userId, roleId);
-    RoleAssigned e2 = RoleAssigned.of(userId, roleId);
+    RoleAssigned e2 = RoleAssigned.createEvent(userId, roleId);
 
     assertEquals(e1.getUserId(),   e2.getUserId());
     assertEquals(e1.getRoleId(),   e2.getRoleId());

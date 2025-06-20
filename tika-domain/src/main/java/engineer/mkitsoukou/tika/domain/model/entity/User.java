@@ -65,7 +65,7 @@ public final class User extends AbstractEntity {
     var newId = UserId.generate();
     var hash = passwordService.hash(plainPassword);
     var user = new User(newId, email, hash, Collections.emptySet());
-    user.recordEvent(UserRegistered.of(newId, email));
+    user.recordEvent(UserRegistered.createEvent(newId, email));
     return user;
   }
 
@@ -92,7 +92,7 @@ public final class User extends AbstractEntity {
     }
 
     this.passwordHash = passwordService.hash(newPassword);
-    recordEvent(PasswordChanged.of(id));
+    recordEvent(PasswordChanged.createEvent(id));
   }
 
   /**
@@ -111,7 +111,7 @@ public final class User extends AbstractEntity {
     requireNonNull(passwordService, "passwordService");
 
     this.passwordHash = passwordService.hash(newPassword);
-    recordEvent(PasswordChanged.of(id));
+    recordEvent(PasswordChanged.createEvent(id));
   }
 
   /**
@@ -280,7 +280,7 @@ public final class User extends AbstractEntity {
    */
   public void activate() {
     this.active = true;
-    recordEvent(UserActivationChanged.of(id, true));
+    recordEvent(UserActivationChanged.createEvent(id, true));
   }
 
   /**
@@ -288,7 +288,7 @@ public final class User extends AbstractEntity {
    */
   public void deactivate() {
     this.active = false;
-    recordEvent(UserActivationChanged.of(id, false));
+    recordEvent(UserActivationChanged.createEvent(id, false));
   }
 
   @Override

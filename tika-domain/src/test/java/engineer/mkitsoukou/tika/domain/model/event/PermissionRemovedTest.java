@@ -27,7 +27,7 @@ class PermissionRemovedTest {
     Permission permission = new Permission("update.users");
 
     PermissionRemoved event1 = new PermissionRemoved(roleId, permission);
-    PermissionRemoved event2 = PermissionRemoved.of(roleId, permission);
+    PermissionRemoved event2 = PermissionRemoved.createEvent(roleId, permission);
 
     assertEquals(event1.getRoleId(), event2.getRoleId());
     assertEquals(event1.getPermission(), event2.getPermission());

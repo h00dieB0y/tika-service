@@ -28,7 +28,7 @@ class UserRegisteredTest {
     Email email = new Email("bob@example.com");
 
     UserRegistered evt1 = new UserRegistered(userId, email);
-    UserRegistered evt2 = UserRegistered.of(userId, email);
+    UserRegistered evt2 = UserRegistered.createEvent(userId, email);
 
     assertEquals(evt1.getUserId(), evt2.getUserId());
     assertEquals(evt1.getEmail(),  evt2.getEmail());

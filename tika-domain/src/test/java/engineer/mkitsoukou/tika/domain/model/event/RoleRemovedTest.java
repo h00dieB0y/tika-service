@@ -28,7 +28,7 @@ class RoleRemovedTest {
     RoleId roleId = RoleId.of(UUID.randomUUID());
 
     RoleRemoved e1 = new RoleRemoved(userId, roleId);
-    RoleRemoved e2 = RoleRemoved.of(userId, roleId);
+    RoleRemoved e2 = RoleRemoved.createEvent(userId, roleId);
 
     assertEquals(e1.getUserId(),   e2.getUserId());
     assertEquals(e1.getRoleId(),   e2.getRoleId());

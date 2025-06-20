@@ -38,9 +38,9 @@ class UserTest {
     email       = new Email("alice@example.com");
     pw          = new PlainPassword("P@ssw0rd!");
     newPw       = new PlainPassword("N3wP@ss!");
-    role        = Role.of(
+    role        = Role.createRole(
       new RoleName("ADMIN"),
-      Set.of()
+      Set.of(new Permission("admin.access"))
     );
     initialHash = new PasswordHash("$2a$10$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k");
     newHash     = new PasswordHash("$2a$11$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k");
@@ -215,6 +215,7 @@ class UserTest {
   @Nested
   class RoleRemovalTests {
     private User user;
+    private Role secondRole;
 
     @BeforeEach
     void initUserWithRole() {
@@ -222,6 +223,14 @@ class UserTest {
       user = User.register(email, pw, svc);
       user.pullEvents();
       user.assignRole(role);
+
+      // Add a second role to allow removal of the first one
+      secondRole = Role.createRole(
+        new RoleName("SECOND_ROLE"),
+        Set.of(new Permission("second.access"))
+      );
+      user.assignRole(secondRole);
+
       user.pullEvents();
     }
 
@@ -241,9 +250,9 @@ class UserTest {
 
     @Test
     void removingUnassignedRoleThrows() {
-      var other = Role.of(
+      var other = Role.createRole(
         new RoleName("OTHER"),
-        Set.of()
+        Set.of(new Permission("other.access"))
       );
       assertThrows(
         RoleNotFoundException.class,
@@ -274,12 +283,12 @@ class UserTest {
       readPermission = new Permission("resource.read");
       writePermission = new Permission("resource.write");
 
-      readerRole = Role.of(
+      readerRole = Role.createRole(
         new RoleName("READER_ROLE"),
         Set.of(readPermission)
       );
 
-      writerRole = Role.of(
+      writerRole = Role.createRole(
         new RoleName("WRITER_ROLE"),
         Set.of(writePermission)
       );

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import engineer.mkitsoukou.tika.domain.exception.EmptyRoleException;
 import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
+import engineer.mkitsoukou.tika.domain.exception.PermissionNotFoundException;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionAdded;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
@@ -31,7 +33,7 @@ class RoleTest {
   class CreationTests {
     @Test
     void roleCreationWithValidDataSucceeds() {
-      var role = Role.of(roleName, Set.of(readPermission));
+      var role = Role.createRole(roleName, Set.of(readPermission));
 
       assertNotNull(role.getRoleId());
       assertEquals(roleName, role.getRoleName());
@@ -40,19 +42,18 @@ class RoleTest {
     }
 
     @Test
-    void roleCreationWithNoPermissionsSucceeds() {
-      var role = Role.of(roleName, Set.of());
-
-      assertNotNull(role.getRoleId());
-      assertEquals(roleName, role.getRoleName());
-      assertTrue(role.getPermissions().isEmpty());
+    void roleCreationWithNoPermissionsThrows() {
+      assertThrows(
+        EmptyRoleException.class,
+        () -> Role.createRole(roleName, Set.of())
+      );
     }
 
     @Test
     void roleCreationWithNullNameThrows() {
       assertThrows(
         EntityRequiredFieldException.class,
-        () -> Role.of(null, Set.of())
+        () -> Role.createRole(null, Set.of(readPermission))
       );
     }
 
@@ -60,7 +61,7 @@ class RoleTest {
     void roleCreationWithNullPermissionsSetThrows() {
       assertThrows(
         EntityRequiredFieldException.class,
-        () -> Role.of(roleName, null)
+        () -> Role.createRole(roleName, null)
       );
     }
   }
@@ -71,29 +72,26 @@ class RoleTest {
 
     @BeforeEach
     void createRole() {
-      role = Role.of(roleName, Set.of());
+      role = Role.createRole(roleName, Set.of(readPermission));
       role.pullEvents(); // Clear creation events
     }
 
     @Test
     void addingPermissionEmitsEvent() {
-      role.addPermission(readPermission);
+      role.addPermission(writePermission);
 
-      assertTrue(role.hasPermission(readPermission));
+      assertTrue(role.hasPermission(writePermission));
 
       var events = role.pullEvents();
       assertEquals(1, events.size());
 
       var event = assertInstanceOf(PermissionAdded.class, events.getFirst());
       assertEquals(role.getRoleId(), event.getRoleId());
-      assertEquals(readPermission, event.getPermission());
+      assertEquals(writePermission, event.getPermission());
     }
 
     @Test
     void addingExistingPermissionDoesNothing() {
-      role.addPermission(readPermission);
-      role.pullEvents(); // Clear first event
-
       role.addPermission(readPermission);
 
       assertTrue(role.hasPermission(readPermission));
@@ -102,27 +100,37 @@ class RoleTest {
 
     @Test
     void removingPermissionEmitsEvent() {
-      role.addPermission(readPermission);
+      role.addPermission(writePermission);
       role.pullEvents(); // Clear add event
 
-      role.removePermission(readPermission);
+      role.removePermission(writePermission);
 
-      assertFalse(role.hasPermission(readPermission));
+      assertFalse(role.hasPermission(writePermission));
 
       var events = role.pullEvents();
       assertEquals(1, events.size());
 
       var event = assertInstanceOf(PermissionRemoved.class, events.getFirst());
       assertEquals(role.getRoleId(), event.getRoleId());
-      assertEquals(readPermission, event.getPermission());
+      assertEquals(writePermission, event.getPermission());
     }
 
     @Test
-    void removingNonExistentPermissionDoesNothing() {
-      role.removePermission(readPermission);
+    void removingLastPermissionThrows() {
+      assertThrows(
+        EmptyRoleException.class,
+        () -> role.removePermission(readPermission)
+      );
+    }
 
-      assertFalse(role.hasPermission(readPermission));
-      assertTrue(role.pullEvents().isEmpty()); // No events
+    @Test
+    void removingNonExistentPermissionThrows() {
+      Permission nonExistentPermission = new Permission("non.existent");
+
+      assertThrows(
+        PermissionNotFoundException.class,
+        () -> role.removePermission(nonExistentPermission)
+      );
     }
 
     @Test
@@ -152,7 +160,7 @@ class RoleTest {
 
   @Test
   void permissionsCollectionIsUnmodifiable() {
-    var role = Role.of(roleName, Set.of(readPermission));
+    var role = Role.createRole(roleName, Set.of(readPermission));
 
     var permissions = role.getPermissions();
 
@@ -164,9 +172,9 @@ class RoleTest {
 
   @Test
   void equalsOnlyChecksRoleId() {
-    var role1 = Role.of(roleName, Set.of(readPermission));
-    var role2 = Role.of(roleName, Set.of(readPermission, writePermission));
-    var role3 = Role.of(new RoleName("DIFFERENT_ROLE"), Set.of());
+    var role1 = Role.createRole(roleName, Set.of(readPermission));
+    var role2 = Role.createRole(roleName, Set.of(readPermission, writePermission));
+    var role3 = Role.createRole(new RoleName("DIFFERENT_ROLE"), Set.of(readPermission));
 
     // Different instances with same data should not be equal
     assertNotEquals(role1, role2);
@@ -176,7 +184,7 @@ class RoleTest {
     assertEquals(role1, role1);
 
     // A role should not equal null or other types
-    assertNotEquals(role1, null);
-    assertNotEquals(role1, "not a role");
+    assertNotEquals(null, role1);
+    assertNotEquals("not a role", role1);
   }
 }

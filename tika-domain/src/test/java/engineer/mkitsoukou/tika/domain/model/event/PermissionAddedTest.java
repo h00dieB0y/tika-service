@@ -28,7 +28,7 @@ class PermissionAddedTest {
     Permission permission = new Permission("write.users");
 
     PermissionAdded event1 = new PermissionAdded(roleId, permission);
-    PermissionAdded event2 = PermissionAdded.of(roleId, permission);
+    PermissionAdded event2 = PermissionAdded.createEvent(roleId, permission);
 
     assertEquals(event1.getRoleId(), event2.getRoleId());
     assertEquals(event1.getPermission(), event2.getPermission());

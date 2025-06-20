@@ -23,7 +23,7 @@ public class UserRegistered extends AbstractDomainEvent {
    * @param email the email of the registered user
    * @return a new UserRegistered event
    */
-  public static UserRegistered of(UserId userId, Email email) {
+  public static UserRegistered createEvent(UserId userId, Email email) {
     return new UserRegistered(userId, email);
   }
 

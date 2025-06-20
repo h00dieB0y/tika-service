@@ -18,7 +18,7 @@ public class PasswordChanged extends AbstractDomainEvent {
    * @param userId the ID of the user whose password was changed
    * @return a new PasswordChanged event
    */
-  public static PasswordChanged of(UserId userId) {
+  public static PasswordChanged createEvent(UserId userId) {
     return new PasswordChanged(userId);
   }
 
