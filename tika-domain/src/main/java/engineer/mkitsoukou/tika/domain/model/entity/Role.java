@@ -1,5 +1,6 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
+import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionAdded;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
@@ -26,7 +27,7 @@ public final class Role extends AbstractEntity {
    * @param roleId      the unique identifier of the role
    * @param roleName    the name of the role
    * @param permissions the initial set of permissions for this role
-   * @throws IllegalArgumentException if any parameter is null
+   * @throws EntityRequiredFieldException if any parameter is null
    */
   private Role(RoleId roleId, RoleName roleName, Set<Permission> permissions) {
     this.roleId = requireNonNull(roleId, "roleId");
@@ -40,7 +41,7 @@ public final class Role extends AbstractEntity {
    * @param roleName    the name of the role
    * @param permissions the initial set of permissions for this role
    * @return a new Role instance
-   * @throws IllegalArgumentException if any parameter is null
+   * @throws EntityRequiredFieldException if any parameter is null
    */
   public static Role of(RoleName roleName, Set<Permission> permissions) {
     return new Role(RoleId.generate(), roleName, permissions);
@@ -78,7 +79,7 @@ public final class Role extends AbstractEntity {
    * If the permission is already assigned, no action is taken.
    *
    * @param permission the permission to add
-   * @throws IllegalArgumentException if the permission is null
+   * @throws EntityRequiredFieldException if the permission is null
    */
   public void addPermission(Permission permission) {
     requireNonNull(permission, "permission");
@@ -93,7 +94,7 @@ public final class Role extends AbstractEntity {
    * If the permission is not assigned, no action is taken.
    *
    * @param permission the permission to remove
-   * @throws IllegalArgumentException if the permission is null
+   * @throws EntityRequiredFieldException if the permission is null
    */
   public void removePermission(Permission permission) {
     requireNonNull(permission, "permission");
@@ -108,7 +109,7 @@ public final class Role extends AbstractEntity {
    *
    * @param permission the permission to check
    * @return true if the role has the permission, false otherwise
-   * @throws IllegalArgumentException if the permission is null
+   * @throws EntityRequiredFieldException if the permission is null
    */
   public boolean hasPermission(Permission permission) {
     requireNonNull(permission, "permission");

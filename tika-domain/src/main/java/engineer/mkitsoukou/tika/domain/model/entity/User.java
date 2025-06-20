@@ -1,5 +1,7 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
+import engineer.mkitsoukou.tika.domain.exception.IncorrectPasswordException;
+import engineer.mkitsoukou.tika.domain.exception.RoleNotFoundException;
 import engineer.mkitsoukou.tika.domain.model.event.PasswordChanged;
 import engineer.mkitsoukou.tika.domain.model.event.RoleAssigned;
 import engineer.mkitsoukou.tika.domain.model.event.RoleRemoved;
@@ -28,7 +30,7 @@ public final class User extends AbstractEntity {
    * @param email        the email address of the user
    * @param passwordHash the hashed password of the user
    * @param initialRoles the initial set of roles assigned to the user
-   * @throws IllegalArgumentException if any parameter is null
+   * @throws EntityRequiredFieldException if any parameter is null
    */
   private User(UserId id, Email email, PasswordHash passwordHash, Set<Role> initialRoles) {
     this.id = requireNonNull(id, "id");
@@ -44,7 +46,7 @@ public final class User extends AbstractEntity {
    * @param plainPassword   the plain text password of the new user
    * @param passwordService service to hash passwords
    * @return a new User instance
-   * @throws IllegalArgumentException if any parameter is null
+   * @throws EntityRequiredFieldException if any parameter is null
    */
   public static User register(
       Email email,
@@ -68,7 +70,8 @@ public final class User extends AbstractEntity {
    * @param oldPassword     the current password for verification
    * @param newPassword     the new password to set
    * @param passwordService service to hash and verify passwords
-   * @throws IllegalArgumentException if old password is incorrect or any parameter is null
+   * @throws EntityRequiredFieldException if any parameter is null
+   * @throws IncorrectPasswordException if old password is incorrect
    */
   public void changePassword(
       PlainPassword oldPassword,
@@ -80,7 +83,7 @@ public final class User extends AbstractEntity {
     requireNonNull(passwordService, "passwordService");
 
     if (!passwordService.match(oldPassword, passwordHash)) {
-      throw new IllegalArgumentException("Old password is incorrect");
+      throw new IncorrectPasswordException();
     }
 
     this.passwordHash = passwordService.hash(newPassword);
@@ -91,7 +94,7 @@ public final class User extends AbstractEntity {
    * Assigns a role to the user if not already assigned.
    *
    * @param role the role to assign
-   * @throws IllegalArgumentException if the role is null
+   * @throws EntityRequiredFieldException if the role is null
    */
   public void assignRole(Role role) {
     requireNonNull(role, "role");
@@ -105,13 +108,14 @@ public final class User extends AbstractEntity {
    * Removes a role from the user.
    *
    * @param role the role to remove
-   * @throws IllegalArgumentException if the role is null or not assigned to the user
+   * @throws EntityRequiredFieldException if the role is null
+   * @throws RoleNotFoundException if the role is not assigned to the user
    */
   public void removeRole(Role role) {
     requireNonNull(role, "role");
 
     if (!roles.remove(role)) {
-      throw new IllegalArgumentException("Role not assigned: " + role.getRoleId());
+      throw new RoleNotFoundException(role.getRoleId().toString());
     }
     recordEvent(RoleRemoved.of(id, role.getRoleId()));
   }
@@ -121,7 +125,7 @@ public final class User extends AbstractEntity {
    *
    * @param role the role to check
    * @return true if the user has the role, false otherwise
-   * @throws IllegalArgumentException if the role is null
+   * @throws EntityRequiredFieldException if the role is null
    */
   public boolean hasRole(Role role) {
     requireNonNull(role, "role");
@@ -133,7 +137,7 @@ public final class User extends AbstractEntity {
    *
    * @param permission the permission to check
    * @return true if the user has the permission, false otherwise
-   * @throws IllegalArgumentException if the permission is null
+   * @throws EntityRequiredFieldException if the permission is null
    */
   public boolean hasPermission(Permission permission) {
     requireNonNull(permission, "permission");
@@ -191,4 +195,3 @@ public final class User extends AbstractEntity {
     return "User[id=" + id + ", email=" + email + ", roles=" + roles.size() + "]";
   }
 }
-

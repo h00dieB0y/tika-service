@@ -12,7 +12,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
+import engineer.mkitsoukou.tika.domain.exception.IncorrectPasswordException;
 import engineer.mkitsoukou.tika.domain.exception.InvalidEmailException;
+import engineer.mkitsoukou.tika.domain.exception.RoleNotFoundException;
 import engineer.mkitsoukou.tika.domain.model.event.*;
 import engineer.mkitsoukou.tika.domain.model.valueobject.*;
 import engineer.mkitsoukou.tika.domain.service.PasswordService;
@@ -69,7 +72,7 @@ class UserTest {
     @Test
     void registerWithNullEmailThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> User.register(null, pw, svc)
       );
     }
@@ -77,7 +80,7 @@ class UserTest {
     @Test
     void registerWithNullPasswordThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> User.register(email, null, svc)
       );
     }
@@ -85,7 +88,7 @@ class UserTest {
     @Test
     void registerWithNullServiceThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> User.register(email, pw, null)
       );
     }
@@ -135,7 +138,7 @@ class UserTest {
       when(svc.match(pw, initialHash)).thenReturn(false);
 
       assertThrows(
-        IllegalArgumentException.class,
+        IncorrectPasswordException.class,
         () -> user.changePassword(pw, newPw, svc)
       );
     }
@@ -143,7 +146,7 @@ class UserTest {
     @Test
     void changePasswordWithNullOldThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> user.changePassword(null, newPw, svc)
       );
     }
@@ -151,7 +154,7 @@ class UserTest {
     @Test
     void changePasswordWithNullNewThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> user.changePassword(pw, null, svc)
       );
     }
@@ -159,7 +162,7 @@ class UserTest {
     @Test
     void changePasswordWithNullServiceThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> user.changePassword(pw, newPw, null)
       );
     }
@@ -203,7 +206,7 @@ class UserTest {
     @Test
     void assignNullRoleThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> user.assignRole(null)
       );
     }
@@ -243,7 +246,7 @@ class UserTest {
         Set.of()
       );
       assertThrows(
-        IllegalArgumentException.class,
+        RoleNotFoundException.class,
         () -> user.removeRole(other)
       );
     }
@@ -251,8 +254,72 @@ class UserTest {
     @Test
     void removeNullRoleThrows() {
       assertThrows(
-        NullPointerException.class,
+        EntityRequiredFieldException.class,
         () -> user.removeRole(null)
+      );
+    }
+  }
+
+  @Nested
+  class PermissionTests {
+    private User user;
+    private Permission readPermission;
+    private Permission writePermission;
+    private Role readerRole;
+    private Role writerRole;
+
+    @BeforeEach
+    void initUserWithRoles() {
+      when(svc.hash(pw)).thenReturn(initialHash);
+      readPermission = new Permission("resource.read");
+      writePermission = new Permission("resource.write");
+
+      readerRole = Role.of(
+        new RoleName("READER_ROLE"),
+        Set.of(readPermission)
+      );
+
+      writerRole = Role.of(
+        new RoleName("WRITER_ROLE"),
+        Set.of(writePermission)
+      );
+
+      user = User.register(email, pw, svc);
+      user.pullEvents(); // clear registration event
+    }
+
+    @Test
+    void userWithNoRolesHasNoPermissions() {
+      assertFalse(user.hasPermission(readPermission));
+      assertFalse(user.hasPermission(writePermission));
+    }
+
+    @Test
+    void userHasPermissionsFromAssignedRoles() {
+      user.assignRole(readerRole);
+      assertTrue(user.hasPermission(readPermission));
+      assertFalse(user.hasPermission(writePermission));
+
+      user.assignRole(writerRole);
+      assertTrue(user.hasPermission(readPermission));
+      assertTrue(user.hasPermission(writePermission));
+    }
+
+    @Test
+    void userLosesPermissionsWhenRoleRemoved() {
+      user.assignRole(readerRole);
+      user.assignRole(writerRole);
+
+      user.removeRole(readerRole);
+      assertFalse(user.hasPermission(readPermission));
+      assertTrue(user.hasPermission(writePermission));
+    }
+
+    @Test
+    void hasPermissionWithNullThrows() {
+      assertThrows(
+        EntityRequiredFieldException.class,
+        () -> user.hasPermission(null)
       );
     }
   }

@@ -1,5 +1,7 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
+import engineer.mkitsoukou.tika.domain.exception.DomainEventException;
+import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
 import engineer.mkitsoukou.tika.domain.model.event.DomainEvent;
 
 import java.util.ArrayList;
@@ -20,11 +22,11 @@ public abstract class AbstractEntity {
    * @param name  the name of the parameter for the error message
    * @param <T>   the type of the value
    * @return the value if it is not null
-   * @throws IllegalArgumentException if the value is null
+   * @throws EntityRequiredFieldException if the value is null
    */
   protected static <T> T requireNonNull(T value, String name) {
     if (value == null) {
-      throw new IllegalArgumentException(name + " cannot be null");
+      throw new EntityRequiredFieldException(name);
     }
     return value;
   }
@@ -33,10 +35,13 @@ public abstract class AbstractEntity {
    * Records a domain event to be published later.
    *
    * @param event the domain event to be published
-   * @throws NullPointerException if the event is null
+   * @throws DomainEventException if the event is null
    */
   protected void recordEvent(DomainEvent event) {
-    events.add(Objects.requireNonNull(event, "Domain event cannot be null"));
+    if (event == null) {
+      throw new DomainEventException("Domain event cannot be null");
+    }
+    events.add(event);
   }
 
   /**
@@ -52,4 +57,3 @@ public abstract class AbstractEntity {
     return pulledEvents;
   }
 }
-
