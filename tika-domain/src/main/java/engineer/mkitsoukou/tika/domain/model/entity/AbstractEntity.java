@@ -3,7 +3,6 @@ package engineer.mkitsoukou.tika.domain.model.entity;
 import engineer.mkitsoukou.tika.domain.model.event.DomainEvent;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -53,3 +52,4 @@ public abstract class AbstractEntity {
     return pulledEvents;
   }
 }
+

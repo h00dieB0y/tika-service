@@ -191,3 +191,4 @@ public final class User extends AbstractEntity {
     return "User[id=" + id + ", email=" + email + ", roles=" + roles.size() + "]";
   }
 }
+

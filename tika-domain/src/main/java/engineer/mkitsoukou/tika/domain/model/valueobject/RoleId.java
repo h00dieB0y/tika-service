@@ -22,6 +22,10 @@ public record RoleId(UUID value) {
     }
   }
 
+  public static RoleId generate() {
+    return new RoleId(UUID.randomUUID());
+  }
+
   @Override
   public String toString() {
     return value.toString();

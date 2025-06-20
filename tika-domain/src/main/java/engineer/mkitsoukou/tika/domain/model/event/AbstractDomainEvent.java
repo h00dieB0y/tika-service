@@ -44,3 +44,4 @@ public abstract class AbstractDomainEvent implements DomainEvent {
     return Objects.requireNonNull(value, parameterName + " must not be null");
   }
 }
+

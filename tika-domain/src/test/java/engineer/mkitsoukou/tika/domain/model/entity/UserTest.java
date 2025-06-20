@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Set;
-import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -36,8 +35,7 @@ class UserTest {
     email       = new Email("alice@example.com");
     pw          = new PlainPassword("P@ssw0rd!");
     newPw       = new PlainPassword("N3wP@ss!");
-    role        = new Role(
-      new RoleId(UUID.randomUUID()),
+    role        = Role.of(
       new RoleName("ADMIN"),
       Set.of()
     );
@@ -240,8 +238,7 @@ class UserTest {
 
     @Test
     void removingUnassignedRoleThrows() {
-      var other = new Role(
-        new RoleId(UUID.randomUUID()),
+      var other = Role.of(
         new RoleName("OTHER"),
         Set.of()
       );

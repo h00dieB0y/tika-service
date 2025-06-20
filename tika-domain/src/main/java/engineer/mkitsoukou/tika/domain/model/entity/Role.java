@@ -5,8 +5,11 @@ import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleName;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
-import java.util.*;
 
 /**
  * Represents a role with a set of permissions in the system.
@@ -25,7 +28,7 @@ public final class Role extends AbstractEntity {
    * @param permissions the initial set of permissions for this role
    * @throws IllegalArgumentException if any parameter is null
    */
-  public Role(RoleId roleId, RoleName roleName, Set<Permission> permissions) {
+  private Role(RoleId roleId, RoleName roleName, Set<Permission> permissions) {
     this.roleId = requireNonNull(roleId, "roleId");
     this.roleName = requireNonNull(roleName, "roleName");
     this.permissions = new HashSet<>(requireNonNull(permissions, "permissions"));
@@ -40,7 +43,7 @@ public final class Role extends AbstractEntity {
    * @throws IllegalArgumentException if any parameter is null
    */
   public static Role of(RoleName roleName, Set<Permission> permissions) {
-    return new Role(RoleId.of(UUID.randomUUID()), roleName, permissions);
+    return new Role(RoleId.generate(), roleName, permissions);
   }
 
   /**
