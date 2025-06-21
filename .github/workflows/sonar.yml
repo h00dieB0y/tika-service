@@ -51,13 +51,31 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
+      # If the workflow is triggered by workflow_run, download compiled classes
+      - name: Download compiled classes (if available)
+        if: github.event_name == 'workflow_run'
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: compiled-classes
+          path: ./
+
+      # Conditional compile - only if classes weren't downloaded or download failed
+      - name: Compile code (if needed)
+        id: compile
+        if: github.event_name != 'workflow_run' || steps.download.outcome == 'failure'
+        run: mvn -B clean compile
+
       - name: Analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate from https://sonarcloud.io/account/security/
         run: |
-          # Skip tests as they've already been run in the CI workflow
+          # Run SonarCloud analysis with binaries path configuration
           mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -DskipTests \
             -Dsonar.projectKey=h00dieB0y_tika-service \
-            -Dsonar.organization=h00dieb0y
+            -Dsonar.organization=h00dieb0y \
+            -Dsonar.java.binaries=**/target/classes \
+            -Dsonar.java.test.binaries=**/target/test-classes \
+            -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml
