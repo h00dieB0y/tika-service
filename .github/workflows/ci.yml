@@ -24,12 +24,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Find Dockerfiles
         id: find-dockerfiles
         run: |
           echo "DOCKERFILES=$(find . -name 'Dockerfile' -o -name '*.dockerfile' | tr '\n' ' ')" >> $GITHUB_OUTPUT
-          
+
       - name: Lint Dockerfiles with Hadolint
         uses: hadolint/hadolint-action@v3.1.0
         if: ${{ steps.find-dockerfiles.outputs.DOCKERFILES != '' }}
@@ -85,12 +85,14 @@ jobs:
             */target/site/pmd.html
             */target/spotbugsXml.xml
 
-  upload-coverage:
+  sonar-analysis:
     needs: build-and-test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -99,12 +101,16 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Generate and publish coverage
-        run: mvn -B verify 
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v3
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: target/site/jacoco/jacoco.xml
-          slug: h00dieB0y/tika-service
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
+      - name: SonarCloud Analysis
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        # Using sonar:sonar directly without verify to skip building again
+        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=${{ github.repository_owner }}_tika-service
