@@ -1,8 +1,11 @@
 name: SonarCloud Analysis
 
 on:
-  push:
-    branches: [ main ]
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -15,8 +18,9 @@ jobs:
   sonar:
     name: Analyze with SonarCloud
     runs-on: ubuntu-latest
-    # Skip analysis if PR is from a fork (for security reasons)
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Skip analysis if PR is from a fork (for security reasons) or if CI workflow failed
+    if: (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') &&
+        (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
 
     steps:
       - name: Checkout code
@@ -47,11 +51,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-m2
 
-      - name: Build, test, and analyze with SonarCloud
+      - name: Analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}    # Generate from https://sonarcloud.io/account/security/
         run: |
-          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+          # Skip tests as they've already been run in the CI workflow
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -DskipTests \
             -Dsonar.projectKey=h00dieB0y_tika-service \
             -Dsonar.organization=h00dieb0y
