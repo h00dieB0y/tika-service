@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # For SonarCloud analysis
 
       - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@v4
@@ -55,6 +57,14 @@ jobs:
 
       - name: Build & run tests
         run: mvn -B verify --fail-at-end
+
+      - name: Upload Maven target directories
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-target
+          path: |
+            */target/
+            target/
 
   static-code-analysis:
     needs: build-and-test
@@ -100,6 +110,11 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
+
+      - name: Download Maven target directories
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-target
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
