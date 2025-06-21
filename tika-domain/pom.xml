@@ -14,11 +14,11 @@
 
   <dependencies>
     <!-- Tests helpers-->
-     <dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter-api</artifactId>
+      <artifactId>junit-jupiter</artifactId> <!-- pulls api + params + engine -->
       <scope>test</scope>
-     </dependency>
+    </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
