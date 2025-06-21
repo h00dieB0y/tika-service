@@ -76,6 +76,3 @@ jobs:
             -DskipTests \
             -Dsonar.projectKey=h00dieB0y_tika-service \
             -Dsonar.organization=h00dieb0y \
-            -Dsonar.java.binaries=**/target/classes \
-            -Dsonar.java.test.binaries=**/target/test-classes \
-            -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml,**/target/site/jacoco-aggregate/jacoco.xml
