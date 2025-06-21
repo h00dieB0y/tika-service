@@ -95,14 +95,16 @@ jobs:
             */target/site/pmd.html
             */target/spotbugsXml.xml
 
-  sonar-analysis:
+  sonarcloud-analysis:
     needs: build-and-test
     runs-on: ubuntu-latest
+    # Skip running on forks without Sonar credentials
+    if: github.repository == 'h00dieB0y/tika-service'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for better relevancy of analysis
+          fetch-depth: 0  # Required for SonarCloud
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -116,15 +118,10 @@ jobs:
         with:
           name: maven-target
 
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-
       - name: SonarCloud Analysis
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: |
+          # Run SonarCloud analysis on the multi-module project
+          mvn -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
