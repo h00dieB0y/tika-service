@@ -166,7 +166,7 @@ class PlainPasswordTest {
 
             // Then
             assertThat(firstPlainPassword).isEqualTo(secondPlainPassword)
-                .hasSameHashCodeAs(passwordValue);
+                .hasSameHashCodeAs(secondPlainPassword);
         }
 
         @Test
