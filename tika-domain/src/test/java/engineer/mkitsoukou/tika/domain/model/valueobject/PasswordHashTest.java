@@ -103,8 +103,8 @@ class PasswordHashTest {
             var secondPasswordHash = PasswordHash.of(hashValue);
 
             // Then
-            assertThat(firstPasswordHash).isEqualTo(secondPasswordHash);
-            assertThat(firstPasswordHash.hashCode()).isEqualTo(secondPasswordHash.hashCode());
+            assertThat(firstPasswordHash).isEqualTo(secondPasswordHash)
+                .hasSameHashCodeAs(secondPasswordHash);
         }
 
         @Test
@@ -118,8 +118,8 @@ class PasswordHashTest {
             var stringRepresentation = passwordHash.toString();
 
             // Then - assuming implementation masks the hash for security
-            assertThat(stringRepresentation).doesNotContain(hashValue);
-            assertThat(stringRepresentation).contains("[PROTECTED]");
+            assertThat(stringRepresentation).doesNotContain(hashValue)
+                .isEqualTo("[PROTECTED]");
         }
     }
 
