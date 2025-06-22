@@ -7,67 +7,175 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class RoleIdTest {
+@DisplayName("RoleId value object")
+class RoleIdTest {
 
-  @Nested
-  @DisplayName("Valid role ID scenarios")
-  class ValidRoleIdScenarios {
+    @Nested
+    @DisplayName("Null value handling")
+    class NullValueHandling {
+        @Test
+        @DisplayName("Given null UUID when creating RoleId then throws NullPointerException")
+        void givenNullUuid_whenCreatingRoleId_thenThrowsNullPointerException() {
+            assertThrows(NullPointerException.class, () -> new RoleId(null));
+        }
 
-    @Test
-    @DisplayName("Creates RoleId object when UUID is valid")
-    void createsRoleIdWhenUuidIsValid() {
-      UUID validUuid = UUID.randomUUID();
-      RoleId roleId = RoleId.of(validUuid);
+        @Test
+        @DisplayName("Given null UUID when using factory method then throws NullPointerException")
+        void givenNullUuid_whenUsingFactoryMethod_thenThrowsNullPointerException() {
+            UUID nullUuid = null;
+            assertThrows(NullPointerException.class, () -> RoleId.of(nullUuid));
+        }
 
-      assertNotNull(roleId);
-      assertEquals(validUuid, roleId.value());
+        @Test
+        @DisplayName("Given null string when using factory method then throws NullPointerException")
+        void givenNullString_whenUsingFactoryMethod_thenThrowsNullPointerException() {
+            String nullString = null;
+            assertThrows(NullPointerException.class, () -> RoleId.of(nullString));
+        }
     }
 
-    @Test
-    @DisplayName("Creates RoleId object from valid UUID string")
-    void createsRoleIdFromValidUuidString() {
-      String validUuidString = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
-      RoleId roleId = RoleId.of(validUuidString);
+    @Nested
+    @DisplayName("Valid instance creation")
+    class ValidInstanceCreation {
+        @Test
+        @DisplayName("Given valid UUID when creating RoleId then creates successfully")
+        void givenValidUuid_whenCreatingRoleId_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
 
-      assertNotNull(roleId);
-      assertEquals(UUID.fromString(validUuidString), roleId.value());
+            // When
+            var roleId = new RoleId(validUuid);
+
+            // Then
+            assertThat(roleId.value()).isEqualTo(validUuid);
+        }
+
+        @Test
+        @DisplayName("Given valid UUID when using factory method then creates successfully")
+        void givenValidUuid_whenUsingFactoryMethod_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
+
+            // When
+            var roleId = RoleId.of(validUuid);
+
+            // Then
+            assertThat(roleId.value()).isEqualTo(validUuid);
+        }
+
+        @Test
+        @DisplayName("Given valid UUID string when using factory method then creates successfully")
+        void givenValidUuidString_whenUsingFactoryMethod_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
+            var validUuidString = validUuid.toString();
+
+            // When
+            var roleId = RoleId.of(validUuidString);
+
+            // Then
+            assertThat(roleId.value()).isEqualTo(validUuid);
+        }
     }
 
-    @Test
-    @DisplayName("Creates equal RoleId objects with same UUID value")
-    void createsEqualRoleIdObjectsWithSameValue() {
-      UUID uuid = UUID.randomUUID();
-      RoleId roleId1 = RoleId.of(uuid);
-      RoleId roleId2 = RoleId.of(uuid);
+    @Nested
+    @DisplayName("Multiple instance behavior")
+    class MultipleInstanceBehavior {
+        @Test
+        @DisplayName("Given multiple RoleIds when comparing then they are distinct")
+        void givenMultipleRoleIds_whenComparing_thenTheyAreDistinct() {
+            // Given
+            var firstRoleId = RoleId.of(UUID.randomUUID());
+            var secondRoleId = RoleId.of(UUID.randomUUID());
 
-      assertEquals(roleId1, roleId2);
-      assertEquals(roleId1.hashCode(), roleId2.hashCode());
-    }
-  }
-
-  @Nested
-  @DisplayName("Invalid role ID scenarios")
-  class InvalidRoleIdScenarios {
-
-    @Test
-    @DisplayName("Throws exception when UUID is null")
-    void throwsExceptionWhenUuidIsNull() {
-      assertThrows(NullPointerException.class, () -> RoleId.of((UUID) null));
+            // Then
+            assertThat(firstRoleId).isNotEqualTo(secondRoleId);
+        }
     }
 
-    @Test
-    @DisplayName("Throws exception when UUID string is null")
-    void throwsExceptionWhenUuidStringIsNull() {
-      assertThrows(NullPointerException.class, () -> RoleId.of((String) null));
+    @Nested
+    @DisplayName("Boundary behaviors")
+    class BoundaryBehavior {
+        // No specific boundary tests for UUID since it has a fixed format and size
     }
 
-    @Test
-    @DisplayName("Throws exception when UUID string is invalid")
-    void throwsExceptionWhenUuidStringIsInvalid() {
-      String invalidUuidString = "invalid-uuid-string";
-      assertThrows(InvalidRoleIdException.class, () -> RoleId.of(invalidUuidString));
+    @Nested
+    @DisplayName("Object contract compliance")
+    class ObjectContractBehavior {
+        @Test
+        @DisplayName("Given same UUID when comparing RoleIds then they are equal")
+        void givenSameUuid_whenComparingRoleIds_thenTheyAreEqual() {
+            // Given
+            var sharedUuid = UUID.randomUUID();
+            var firstRoleId = RoleId.of(sharedUuid);
+            var secondRoleId = RoleId.of(sharedUuid);
+
+            // Then
+            assertThat(firstRoleId).isEqualTo(secondRoleId).hasSameHashCodeAs(secondRoleId);
+        }
+
+        @Test
+        @DisplayName("Given RoleId when calling toString then returns UUID string representation")
+        void givenRoleId_whenCallingToString_thenReturnsUuidStringRepresentation() {
+            // Given
+            var uuid = UUID.randomUUID();
+            var roleId = RoleId.of(uuid);
+
+            // When
+            var stringRepresentation = roleId.toString();
+
+            // Then
+            assertThat(stringRepresentation).isEqualTo(uuid.toString());
+        }
     }
-  }
+
+    @Nested
+    @DisplayName("Exception handling")
+    class InvalidInputHandling {
+        @Test
+        @DisplayName("Given invalid UUID string when creating RoleId then throws InvalidRoleIdException")
+        void givenInvalidUuidString_whenCreatingRoleId_thenThrowsInvalidRoleIdException() {
+            // Given
+            var malformedUuidString = "not-a-uuid";
+
+            // Then
+            assertThatThrownBy(() -> RoleId.of(malformedUuidString))
+                .isInstanceOf(InvalidRoleIdException.class)
+                .hasMessageContaining(malformedUuidString);
+        }
+
+        @Test
+        @DisplayName("Given empty string when creating RoleId then throws InvalidRoleIdException")
+        void givenEmptyString_whenCreatingRoleId_thenThrowsInvalidRoleIdException() {
+            // Given
+            var emptyUuidString = "";
+
+            // Then
+            assertThatThrownBy(() -> RoleId.of(emptyUuidString))
+                .isInstanceOf(InvalidRoleIdException.class)
+                .hasMessageContaining(emptyUuidString);
+        }
+    }
+
+    @Nested
+    @DisplayName("Common use cases")
+    class CommonUseCases {
+        @Test
+        @DisplayName("Given known UUID string when creating RoleId then value matches expected")
+        void givenKnownUuidString_whenCreatingRoleId_thenValueMatchesExpected() {
+            // Given
+            var knownUuidString = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
+            var expectedUuid = UUID.fromString(knownUuidString);
+
+            // When
+            var roleId = RoleId.of(knownUuidString);
+
+            // Then
+            assertThat(roleId.value()).isEqualTo(expectedUuid);
+        }
+    }
 }

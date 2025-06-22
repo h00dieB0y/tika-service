@@ -7,7 +7,7 @@ public record Email(
     String value
 ) {
   private static final Pattern EMAIL_PATTERN = Pattern.compile(
-    "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?){1,10}$"
   );
 
   public Email {
