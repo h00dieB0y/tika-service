@@ -5,9 +5,15 @@ import java.util.regex.Pattern;
 
 public record RoleName(String name) {
 
-  private static final Pattern PATTERN =     Pattern.compile(
-      "^(?>ROLE_)?(?>[A-Z][A-Z0-9]*)(?:_(?>[A-Z0-9]+))*$"
+  // Role names: optional ROLE_ prefix, all-caps, segments separated by single "_".
+  // • No lowercase, hyphens, leading digits/underscores, trailing/double underscores
+  // • Digits allowed only after the first "_" (or if there is no "_" at all)
+  // • Up to 3 segments, each 1-30 characters, total length up to 100 characters
+  private static final Pattern ROLE_PATTERN = Pattern.compile(
+      "^(?:ROLE_)?[A-Z][A-Z]*(?:\\d+[A-Z]*)*(?:_[A-Z0-9]{1,30}){0,2}$"
   );
+
+
   private static final int MAX_LENGTH = 100;
 
   public RoleName {
@@ -19,7 +25,7 @@ public record RoleName(String name) {
       throw new InvalidRoleNameException(name, new IllegalArgumentException("Role name must not exceed " + MAX_LENGTH + " characters"));
     }
 
-    if (!PATTERN.matcher(name).matches()) {
+    if (!ROLE_PATTERN.matcher(name).matches()) {
       throw new InvalidRoleNameException(name, new IllegalArgumentException("must be a valid role name format"));
     }
   }

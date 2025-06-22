@@ -20,10 +20,18 @@ public record PasswordHash(String hash) {
    * @throws InvalidPasswordException if the hash is null or does not start with "$2"
    */
   public PasswordHash {
-    if (hash == null || !hash.startsWith("$2")) {
+    hash = hash == null ? null : hash.trim();
+
+    if (hash == null || hash.isBlank()) {
       throw new InvalidPasswordException(
         hash,
-          new IllegalArgumentException("must be a valid hash format"));
+          new IllegalArgumentException("Password hash must not be null or blank"));
+    }
+
+    if (!hash.startsWith("$2")) {
+      throw new InvalidPasswordException(
+        hash,
+          new IllegalArgumentException("Invalid password hash format"));
     }
   }
 
