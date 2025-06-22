@@ -7,67 +7,177 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class UserIdTest {
+@DisplayName("UserId value object")
+class UserIdTest {
 
-  @Nested
-  @DisplayName("Valid user ID scenarios")
-  class ValidUserIdScenarios {
+    @Nested
+    @DisplayName("Null value handling")
+    class NullValueHandling {
+        @Test
+        @DisplayName("Given null UUID when creating UserId then throws NullPointerException")
+        void givenNullUuid_whenCreatingUserId_thenThrowsNullPointerException() {
+            assertThrows(NullPointerException.class, () -> new UserId(null));
+        }
 
-    @Test
-    @DisplayName("Creates UserId object when UUID is valid")
-    void createsUserIdWhenUuidIsValid() {
-      UUID validUuid = UUID.randomUUID();
-      UserId userId = UserId.of(validUuid);
+        @Test
+        @DisplayName("Given null UUID when using factory method then throws NullPointerException")
+        void givenNullUuid_whenUsingFactoryMethod_thenThrowsNullPointerException() {
+            UUID nullUuid = null;
+            assertThrows(NullPointerException.class, () -> UserId.of(nullUuid));
+        }
 
-      assertNotNull(userId);
-      assertEquals(validUuid, userId.value());
+        @Test
+        @DisplayName("Given null string when using factory method then throws NullPointerException")
+        void givenNullString_whenUsingFactoryMethod_thenThrowsNullPointerException() {
+            String nullString = null;
+            assertThrows(NullPointerException.class, () -> UserId.of(nullString));
+        }
     }
 
-    @Test
-    @DisplayName("Creates UserId object from valid UUID string")
-    void createsUserIdFromValidUuidString() {
-      String validUuidString = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
-      UserId userId = UserId.of(validUuidString);
+    @Nested
+    @DisplayName("Valid instance creation")
+    class ValidSingleInstanceCreation {
+        @Test
+        @DisplayName("Given valid UUID when creating UserId then creates successfully")
+        void givenValidUuid_whenCreatingUserId_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
 
-      assertNotNull(userId);
-      assertEquals(UUID.fromString(validUuidString), userId.value());
+            // When
+            var userId = new UserId(validUuid);
+
+            // Then
+            assertThat(userId.value()).isEqualTo(validUuid);
+        }
+
+        @Test
+        @DisplayName("Given valid UUID when using factory method then creates successfully")
+        void givenValidUuid_whenUsingFactoryMethod_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
+
+            // When
+            var userId = UserId.of(validUuid);
+
+            // Then
+            assertThat(userId.value()).isEqualTo(validUuid);
+        }
+
+        @Test
+        @DisplayName("Given valid UUID string when using factory method then creates successfully")
+        void givenValidUuidString_whenUsingFactoryMethod_thenCreatesSuccessfully() {
+            // Given
+            var validUuid = UUID.randomUUID();
+            var validUuidString = validUuid.toString();
+
+            // When
+            var userId = UserId.of(validUuidString);
+
+            // Then
+            assertThat(userId.value()).isEqualTo(validUuid);
+        }
     }
 
-    @Test
-    @DisplayName("Creates equal UserId objects with same UUID value")
-    void createsEqualUserIdObjectsWithSameValue() {
-      UUID uuid = UUID.randomUUID();
-      UserId userId1 = UserId.of(uuid);
-      UserId userId2 = UserId.of(uuid);
+    @Nested
+    @DisplayName("Multiple instance behavior")
+    class MultipleInstanceBehavior {
+        @Test
+        @DisplayName("Given multiple UserIds when comparing then they are distinct")
+        void givenMultipleUserIds_whenComparing_thenTheyAreDistinct() {
+            // Given
+            var firstUserId = UserId.of(UUID.randomUUID());
+            var secondUserId = UserId.of(UUID.randomUUID());
 
-      assertEquals(userId1, userId2);
-      assertEquals(userId1.hashCode(), userId2.hashCode());
-    }
-  }
-
-  @Nested
-  @DisplayName("Invalid user ID scenarios")
-  class InvalidUserIdScenarios {
-
-    @Test
-    @DisplayName("Throws exception when UUID is null")
-    void throwsExceptionWhenUuidIsNull() {
-      assertThrows(NullPointerException.class, () -> UserId.of((UUID) null));
+            // Then
+            assertThat(firstUserId).isNotEqualTo(secondUserId);
+        }
     }
 
-    @Test
-    @DisplayName("Throws exception when UUID string is null")
-    void throwsExceptionWhenUuidStringIsNull() {
-      assertThrows(NullPointerException.class, () -> UserId.of((String) null));
+    @Nested
+    @DisplayName("Boundary behaviors")
+    class BoundaryBehavior {
+        // No specific boundary tests for UUID since it has a fixed format and size
     }
 
-    @Test
-    @DisplayName("Throws exception when UUID string is invalid")
-    void throwsExceptionWhenUuidStringIsInvalid() {
-      String invalidUuidString = "invalid-uuid-string";
-      assertThrows(InvalidUserIdException.class, () -> UserId.of(invalidUuidString));
+    @Nested
+    @DisplayName("Object contract compliance")
+    class ObjectContractBehavior {
+        @Test
+        @DisplayName("Given same UUID when comparing UserIds then they are equal")
+        void givenSameUuid_whenComparingUserIds_thenTheyAreEqual() {
+            // Given
+            var sharedUuid = UUID.randomUUID();
+            var firstUserId = UserId.of(sharedUuid);
+            var secondUserId = UserId.of(sharedUuid);
+
+            // Then
+          assertThat(firstUserId)
+            .isEqualTo(secondUserId)
+            .hasSameHashCodeAs(secondUserId);
+        }
+
+        @Test
+        @DisplayName("Given UserId when calling toString then returns UUID string representation")
+        void givenUserId_whenCallingToString_thenReturnsUuidStringRepresentation() {
+            // Given
+            var uuid = UUID.randomUUID();
+            var userId = UserId.of(uuid);
+
+            // When
+            var stringRepresentation = userId.toString();
+
+            // Then
+            assertThat(stringRepresentation).isEqualTo(uuid.toString());
+        }
     }
-  }
+
+    @Nested
+    @DisplayName("Exception handling")
+    class InvalidInputHandling {
+        @Test
+        @DisplayName("Given invalid UUID string when creating UserId then throws InvalidUserIdException")
+        void givenInvalidUuidString_whenCreatingUserId_thenThrowsInvalidUserIdException() {
+            // Given
+            var malformedUuidString = "not-a-uuid";
+
+            // Then
+            assertThatThrownBy(() -> UserId.of(malformedUuidString))
+                .isInstanceOf(InvalidUserIdException.class)
+                .hasMessageContaining(malformedUuidString);
+        }
+
+        @Test
+        @DisplayName("Given empty string when creating UserId then throws InvalidUserIdException")
+        void givenEmptyString_whenCreatingUserId_thenThrowsInvalidUserIdException() {
+            // Given
+            var emptyUuidString = "";
+
+            // Then
+            assertThatThrownBy(() -> UserId.of(emptyUuidString))
+                .isInstanceOf(InvalidUserIdException.class)
+                .hasMessageContaining(emptyUuidString);
+        }
+    }
+
+    @Nested
+    @DisplayName("Common use cases")
+    class CommonUseCases {
+        @Test
+        @DisplayName("Given known UUID string when creating UserId then value matches expected")
+        void givenKnownUuidString_whenCreatingUserId_thenValueMatchesExpected() {
+            // Given
+            var knownUuidString = "f47ac10b-58cc-4372-a567-0e02b2c3d479";
+            var expectedUuid = UUID.fromString(knownUuidString);
+
+            // When
+            var userId = UserId.of(knownUuidString);
+
+            // Then
+            assertThat(userId.value()).isEqualTo(expectedUuid);
+        }
+    }
 }

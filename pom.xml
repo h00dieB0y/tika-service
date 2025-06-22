@@ -41,6 +41,9 @@
     <!-- JUnit 5 -->
     <junit.jupiter.version>5.12.2</junit.jupiter.version>
 
+    <!-- AssertJ -->
+    <assertj.version>3.27.3</assertj.version>
+
     <!-- SonarCloud -->
     <sonar.projectKey>h00dieB0y_tika-service</sonar.projectKey>
     <sonar.organization>h00dieb0y</sonar.organization>
@@ -100,6 +103,14 @@
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>${junit.jupiter.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.assertj</groupId>
+        <artifactId>assertj-core</artifactId>
+        <version>${assertj.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
