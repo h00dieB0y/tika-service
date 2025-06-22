@@ -130,7 +130,7 @@ class EmailTest {
             var secondEmail = Email.of(emailValue);
 
             // Then
-            assertThat(firstEmail).isEqualTo(secondEmail).hasSameHashCodeAs(emailValue);
+            assertThat(firstEmail).isEqualTo(secondEmail).hasSameHashCodeAs(secondEmail);
         }
 
         @Test

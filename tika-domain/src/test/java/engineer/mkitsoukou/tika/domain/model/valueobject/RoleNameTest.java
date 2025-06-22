@@ -180,7 +180,7 @@ class RoleNameTest {
 
       // Then
       assertThat(firstRoleName).isEqualTo(secondRoleName)
-        .hasSameHashCodeAs(roleNameValue);
+        .hasSameHashCodeAs(secondRoleName);
     }
 
     @Test
