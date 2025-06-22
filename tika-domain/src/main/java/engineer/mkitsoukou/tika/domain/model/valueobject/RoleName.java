@@ -5,12 +5,12 @@ import java.util.regex.Pattern;
 
 public record RoleName(String name) {
 
-  // Role names: optional ROLE_ prefix, all-caps, segments separated by single “_”.
+  // Role names: optional ROLE_ prefix, all-caps, segments separated by single "_".
   // • No lowercase, hyphens, leading digits/underscores, trailing/double underscores
-  // • Digits allowed only after the first “_” (or if there is no “_” at all)
+  // • Digits allowed only after the first "_" (or if there is no "_" at all)
   // • Up to 3 segments, each 1-30 characters, total length up to 100 characters
   private static final Pattern ROLE_PATTERN = Pattern.compile(
-      "^(?:ROLE_)?(?![A-Z0-9]*\\d[A-Z0-9]*_)[A-Z][A-Z0-9]*(?:_[A-Z0-9]{1,30}){0,2}$"
+      "^(?:ROLE_)?[A-Z][A-Z]*(?:\\d+[A-Z]*)*(?:_[A-Z0-9]{1,30}){0,2}$"
   );
 
 

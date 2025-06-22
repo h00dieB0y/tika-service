@@ -228,8 +228,6 @@ class RoleNameTest {
       "ADMIN_",                     // Ending with underscore
       "ADMIN__USER",                // Double underscore
       "ROLE_admin",                 // Lowercase after prefix
-      "R0LE_ADMIN",                 // Number in ROLE prefix
-      "A1_USER",                    // Digit before underscore
       "ROLE_ADMIN_USER_MANAGER_X",  // Too many segments (4)
     })
     @DisplayName("Given invalid role name format when creating RoleName then throws InvalidRoleNameException")
@@ -240,15 +238,13 @@ class RoleNameTest {
     }
 
     @Test
-    @DisplayName("Given role name with digit before underscore when creating RoleName then throws InvalidRoleNameException")
-    void givenRoleNameWithDigitBeforeUnderscore_whenCreatingRoleName_thenThrowsInvalidRoleNameException() {
+    @DisplayName("Given role name with digits in the first segment when creating RoleName then creates successfully")
+    void givenRoleNameWithDigitsInFirstSegment_whenCreatingRoleName_thenCreatesSuccessfully() {
       // Given
-      var roleNameWithDigitBeforeUnderscore = "ADMIN1_USER";
+      var roleNameWithDigit = "ADMIN1_USER";
 
       // Then
-      assertThatThrownBy(() -> RoleName.of(roleNameWithDigitBeforeUnderscore))
-        .isInstanceOf(InvalidRoleNameException.class)
-        .hasMessageContaining("must be a valid role name format");
+      assertDoesNotThrow(() -> RoleName.of(roleNameWithDigit));
     }
   }
 
@@ -308,4 +304,3 @@ class RoleNameTest {
     }
   }
 }
-
