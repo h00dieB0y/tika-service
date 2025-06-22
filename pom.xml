@@ -215,7 +215,6 @@
           </dependencies>
 
           <configuration>
-            <testPlugin>junit5</testPlugin>
             <targetClasses>
               <param>engineer.mkitsoukou.tika.*</param>
             </targetClasses>
@@ -223,13 +222,16 @@
               <param>engineer.mkitsoukou.tika.*</param>
             </targetTests>
             <crossModule>true</crossModule>
-            <aggregateReport>true</aggregateReport>
             <threads>4</threads>
             <outputFormats><param>HTML</param></outputFormats>
             <outputDirectory>${project.build.directory}/site/pit-reports</outputDirectory>
             <timestampedReports>false</timestampedReports>
             <failWhenNoMutations>false</failWhenNoMutations>
-            <excludeTestClasses><param>**/*Integration*</param></excludeTestClasses>
+            <excludedClasses>
+              <param>engineer.mkitsoukou.tika.infrastructure.*</param>
+              <param>engineer.mkitsoukou.tika.security.*</param>
+              <param>engineer.mkitsoukou.tika.shared.*</param>
+            </excludedClasses>
             <verbose>true</verbose>
           </configuration>
 

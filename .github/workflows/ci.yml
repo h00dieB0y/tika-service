@@ -115,7 +115,7 @@ jobs:
           name: maven-target
 
       - name: Run PITest mutation testing
-        run: mvn org.pitest:pitest-maven:mutationCoverage -DwithHistory=true -DtimestampedReports=false
+        run: mvn verify -Dpit.test=true -DskipTests
         env:
           MAVEN_OPTS: "-Xmx4g"
 
