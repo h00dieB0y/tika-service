@@ -1,14 +1,5 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
-import static org.assertj.core.api.Assertions.*;
-
-import java.util.Set;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import engineer.mkitsoukou.tika.domain.exception.EmptyRoleException;
 import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
 import engineer.mkitsoukou.tika.domain.exception.PermissionNotFoundException;
@@ -16,17 +7,18 @@ import engineer.mkitsoukou.tika.domain.model.event.PermissionAdded;
 import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleName;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Role Entity")
 class RoleTest {
-
-  // Test fixtures as records for immutability
-  private record RoleFixtures(
-      RoleName adminRoleName,
-      Permission readPermission,
-      Permission writePermission,
-      Permission deletePermission,
-      Permission updatePermission) {}
 
   private RoleFixtures fixtures;
 
@@ -39,6 +31,15 @@ class RoleTest {
         new Permission("resource.delete"),
         new Permission("resource.update")
     );
+  }
+
+  // Test fixtures as records for immutability
+  private record RoleFixtures(
+      RoleName adminRoleName,
+      Permission readPermission,
+      Permission writePermission,
+      Permission deletePermission,
+      Permission updatePermission) {
   }
 
   @Nested
@@ -219,7 +220,7 @@ class RoleTest {
 
         // Verify each permission has an event
         assertThat(events)
-            .extracting(event -> ((PermissionAdded)event).getPermission())
+            .extracting(event -> ((PermissionAdded) event).getPermission())
             .containsExactlyInAnyOrder(fixtures.writePermission(), fixtures.deletePermission());
       }
 
@@ -278,7 +279,7 @@ class RoleTest {
 
         // Verify each permission has a removal event
         assertThat(events)
-            .extracting(event -> ((PermissionRemoved)event).getPermission())
+            .extracting(event -> ((PermissionRemoved) event).getPermission())
             .containsExactlyInAnyOrder(fixtures.writePermission(), fixtures.deletePermission());
       }
 
@@ -340,22 +341,59 @@ class RoleTest {
       ).isInstanceOf(UnsupportedOperationException.class);
     }
 
-    @Test
-    @DisplayName("should compare roles based only on roleId")
-    void shouldCompareRolesBasedOnlyOnRoleId() {
-      // Arrange
-      var role1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-      var role2 = Role.createRole(fixtures.adminRoleName(),
-          Set.of(fixtures.readPermission(), fixtures.writePermission()));
-      var role3 = Role.createRole(new RoleName("DIFFERENT_ROLE"), Set.of(fixtures.readPermission()));
+    @Nested
+    @DisplayName("Object contract")
+    class ObjectContract {
+      @Test
+      @DisplayName("should compare roles based only on roleId")
+      void shouldCompareRolesBasedOnlyOnRoleId() {
+        // Arrange
+        var role1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        var role2 = Role.createRole(fixtures.adminRoleName(),
+            Set.of(fixtures.readPermission(), fixtures.writePermission()));
+        var role3 = Role.createRole(new RoleName("DIFFERENT_ROLE"), Set.of(fixtures.readPermission()));
 
-      // Assert different instances are not equal
-      assertThat(role1)
-          .isNotNull()
-          .isNotEqualTo(role2)
-          .isNotEqualTo(role3)
-          .isNotEqualTo(new Object());
+        assertThat(role1)
+            .isNotEqualTo(role2)
+            .isNotEqualTo(role3)
+            .isEqualTo(role1)
+            .isNotNull();
+      }
 
+      @Test
+      @DisplayName("should have consistent hashCode based on roleId")
+      void shouldHaveConsistentHashCodeBasedOnRoleId() {
+        // Arrange
+        var role1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        var role1Copy = role1; // Same reference should have same hashCode
+
+        // Act & Assert
+        assertThat(role1)
+            .hasSameHashCodeAs(role1)
+            .hasSameHashCodeAs(role1Copy);
+
+        // Different roles should have different hashCodes (high probability)
+        var role2 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        assertThat(role1.hashCode()).isNotEqualTo(role2.hashCode());
+      }
+
+      @Test
+      @DisplayName("should provide a descriptive toString representation")
+      void shouldProvideDescriptiveToStringRepresentation() {
+        // Arrange
+        var role = Role.createRole(fixtures.adminRoleName(),
+            Set.of(fixtures.readPermission(), fixtures.writePermission()));
+
+        // Act
+        var stringRepresentation = role.toString();
+
+        // Assert
+        assertThat(stringRepresentation)
+            .contains("Role")
+            .contains(role.getRoleId().toString())
+            .contains(fixtures.adminRoleName().toString())
+            .contains("permissionsCount=2"); // Should mention the count of permissions
+      }
     }
   }
 }
