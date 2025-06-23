@@ -1,10 +1,9 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Set;
-
+import engineer.mkitsoukou.tika.domain.exception.*;
+import engineer.mkitsoukou.tika.domain.model.event.*;
+import engineer.mkitsoukou.tika.domain.model.valueobject.*;
+import engineer.mkitsoukou.tika.domain.service.PasswordService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,14 +12,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
-import engineer.mkitsoukou.tika.domain.exception.IncorrectPasswordException;
-import engineer.mkitsoukou.tika.domain.exception.InvalidEmailException;
-import engineer.mkitsoukou.tika.domain.exception.NoRolesAssignedException;
-import engineer.mkitsoukou.tika.domain.exception.RoleNotFoundException;
-import engineer.mkitsoukou.tika.domain.model.event.*;
-import engineer.mkitsoukou.tika.domain.model.valueobject.*;
-import engineer.mkitsoukou.tika.domain.service.PasswordService;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("User Entity")
@@ -28,12 +24,6 @@ class UserTest {
 
   @Mock
   private PasswordService passwordService;
-
-  // Test fixtures as records for immutability
-  private record UserCredentials(Email email, PlainPassword password, PlainPassword newPassword) {}
-  private record UserRoles(Role adminRole, Role readerRole, Role writerRole) {}
-  private record PasswordHashes(PasswordHash initial, PasswordHash updated) {}
-
   private UserCredentials credentials;
   private UserRoles roles;
   private PasswordHashes hashes;
@@ -41,30 +31,61 @@ class UserTest {
   @BeforeEach
   void prepareTestFixtures() {
     credentials = new UserCredentials(
-      new Email("alice@example.com"),
-      new PlainPassword("P@ssw0rd!"),
-      new PlainPassword("N3wP@ss!")
+        new Email("alice@example.com"),
+        new PlainPassword("P@ssw0rd!"),
+        new PlainPassword("N3wP@ss!")
     );
 
     roles = new UserRoles(
-      Role.createRole(
-        new RoleName("ADMIN"),
-        Set.of(new Permission("admin.access"))
-      ),
-      Role.createRole(
-        new RoleName("READER_ROLE"),
-        Set.of(new Permission("resource.read"))
-      ),
-      Role.createRole(
-        new RoleName("WRITER_ROLE"),
-        Set.of(new Permission("resource.write"))
-      )
+        Role.createRole(
+            new RoleName("ADMIN"),
+            Set.of(new Permission("admin.access"))
+        ),
+        Role.createRole(
+            new RoleName("READER_ROLE"),
+            Set.of(new Permission("resource.read"))
+        ),
+        Role.createRole(
+            new RoleName("WRITER_ROLE"),
+            Set.of(new Permission("resource.write"))
+        )
     );
 
     hashes = new PasswordHashes(
-      new PasswordHash("$2a$10$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k"),
-      new PasswordHash("$2a$11$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k")
+        new PasswordHash("$2a$10$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k"),
+        new PasswordHash("$2a$11$eImiTMZG4T5x1j6d8f9eOe1z5b3Z5h5k5f5k5f5k5f5k5f5k5f5k")
     );
+  }
+
+  @Test
+  @DisplayName("should clear events after they are pulled")
+  void shouldClearEventsAfterTheyArePulled() {
+    // Arrange
+    when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
+    when(passwordService.hash(credentials.newPassword())).thenReturn(hashes.updated());
+    when(passwordService.match(credentials.password(), hashes.initial())).thenReturn(true);
+
+    var user = User.register(credentials.email(), credentials.password(), passwordService);
+    user.changePassword(credentials.password(), credentials.newPassword(), passwordService);
+    user.assignRole(roles.adminRole());
+
+    // Act
+    var firstPull = user.pullEvents();
+    var secondPull = user.pullEvents();
+
+    // Assert
+    assertThat(firstPull).hasSize(3);
+    assertThat(secondPull).isEmpty();
+  }
+
+  // Test fixtures as records for immutability
+  private record UserCredentials(Email email, PlainPassword password, PlainPassword newPassword) {
+  }
+
+  private record UserRoles(Role adminRole, Role readerRole, Role writerRole) {
+  }
+
+  private record PasswordHashes(PasswordHash initial, PasswordHash updated) {
   }
 
   @Nested
@@ -99,7 +120,7 @@ class UserTest {
     @DisplayName("should reject registration with null email")
     void shouldRejectRegistrationWithNullEmail() {
       assertThatThrownBy(() ->
-        User.register(null, credentials.password(), passwordService)
+          User.register(null, credentials.password(), passwordService)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
 
@@ -107,7 +128,7 @@ class UserTest {
     @DisplayName("should reject registration with null password")
     void shouldRejectRegistrationWithNullPassword() {
       assertThatThrownBy(() ->
-        User.register(credentials.email(), null, passwordService)
+          User.register(credentials.email(), null, passwordService)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
 
@@ -115,7 +136,7 @@ class UserTest {
     @DisplayName("should reject registration with null password service")
     void shouldRejectRegistrationWithNullPasswordService() {
       assertThatThrownBy(() ->
-        User.register(credentials.email(), credentials.password(), null)
+          User.register(credentials.email(), credentials.password(), null)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
 
@@ -123,7 +144,7 @@ class UserTest {
     @DisplayName("should reject registration with invalid email format")
     void shouldRejectRegistrationWithInvalidEmailFormat() {
       assertThatThrownBy(() ->
-        User.register(new Email("not-an-email"), credentials.password(), passwordService)
+          User.register(new Email("not-an-email"), credentials.password(), passwordService)
       ).isInstanceOf(InvalidEmailException.class);
     }
   }
@@ -179,11 +200,11 @@ class UserTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-          authenticatedUser.changePassword(
-              credentials.password(),
-              credentials.newPassword(),
-              passwordService
-          )
+            authenticatedUser.changePassword(
+                credentials.password(),
+                credentials.newPassword(),
+                passwordService
+            )
         ).isInstanceOf(IncorrectPasswordException.class);
       }
 
@@ -191,7 +212,7 @@ class UserTest {
       @DisplayName("should reject null current password")
       void shouldRejectNullCurrentPassword() {
         assertThatThrownBy(() ->
-          authenticatedUser.changePassword(null, credentials.newPassword(), passwordService)
+            authenticatedUser.changePassword(null, credentials.newPassword(), passwordService)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -199,7 +220,7 @@ class UserTest {
       @DisplayName("should reject null new password")
       void shouldRejectNullNewPassword() {
         assertThatThrownBy(() ->
-          authenticatedUser.changePassword(credentials.password(), null, passwordService)
+            authenticatedUser.changePassword(credentials.password(), null, passwordService)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -207,7 +228,7 @@ class UserTest {
       @DisplayName("should reject null password service")
       void shouldRejectNullPasswordService() {
         assertThatThrownBy(() ->
-          authenticatedUser.changePassword(credentials.password(), credentials.newPassword(), null)
+            authenticatedUser.changePassword(credentials.password(), credentials.newPassword(), null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
     }
@@ -242,7 +263,7 @@ class UserTest {
       @DisplayName("should reject null password")
       void shouldRejectNullPassword() {
         assertThatThrownBy(() ->
-          authenticatedUser.resetPassword(null, passwordService)
+            authenticatedUser.resetPassword(null, passwordService)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -250,7 +271,7 @@ class UserTest {
       @DisplayName("should reject null password service")
       void shouldRejectNullPasswordService() {
         assertThatThrownBy(() ->
-          authenticatedUser.resetPassword(credentials.newPassword(), null)
+            authenticatedUser.resetPassword(credentials.newPassword(), null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
     }
@@ -311,7 +332,7 @@ class UserTest {
       @DisplayName("should reject null role during assignment")
       void shouldRejectNullRoleDuringAssignment() {
         assertThatThrownBy(() ->
-          authenticatedUser.assignRole(null)
+            authenticatedUser.assignRole(null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -352,7 +373,7 @@ class UserTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-          authenticatedUser.removeRole(roles.readerRole())
+            authenticatedUser.removeRole(roles.readerRole())
         ).isInstanceOf(RoleNotFoundException.class);
       }
 
@@ -360,7 +381,7 @@ class UserTest {
       @DisplayName("should reject null role during removal")
       void shouldRejectNullRoleDuringRemoval() {
         assertThatThrownBy(() ->
-          authenticatedUser.removeRole(null)
+            authenticatedUser.removeRole(null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -373,7 +394,7 @@ class UserTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-          authenticatedUser.removeRole(roles.adminRole())
+            authenticatedUser.removeRole(roles.adminRole())
         ).isInstanceOf(NoRolesAssignedException.class);
       }
     }
@@ -406,7 +427,7 @@ class UserTest {
       @DisplayName("should reject null set during bulk assignment")
       void shouldRejectNullSetDuringBulkAssignment() {
         assertThatThrownBy(() ->
-          authenticatedUser.assignRoles(null)
+            authenticatedUser.assignRoles(null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -451,7 +472,7 @@ class UserTest {
       @DisplayName("should reject null set during bulk removal")
       void shouldRejectNullSetDuringBulkRemoval() {
         assertThatThrownBy(() ->
-          authenticatedUser.removeRoles(null)
+            authenticatedUser.removeRoles(null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -479,7 +500,7 @@ class UserTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-          authenticatedUser.removeRoles(Set.of(roles.readerRole()))
+            authenticatedUser.removeRoles(Set.of(roles.readerRole()))
         ).isInstanceOf(RoleNotFoundException.class);
       }
 
@@ -492,7 +513,7 @@ class UserTest {
 
         // Act & Assert
         assertThatThrownBy(() ->
-          authenticatedUser.removeRoles(Set.of(roles.adminRole(), roles.readerRole()))
+            authenticatedUser.removeRoles(Set.of(roles.adminRole(), roles.readerRole()))
         ).isInstanceOf(NoRolesAssignedException.class);
       }
     }
@@ -526,7 +547,7 @@ class UserTest {
       @DisplayName("should reject null role during membership check")
       void shouldRejectNullRoleDuringMembershipCheck() {
         assertThatThrownBy(() ->
-          authenticatedUser.hasRole(null)
+            authenticatedUser.hasRole(null)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -609,7 +630,7 @@ class UserTest {
     @DisplayName("should reject null permission during permission check")
     void shouldRejectNullPermissionDuringPermissionCheck() {
       assertThatThrownBy(() ->
-        authenticatedUser.hasPermission(null)
+          authenticatedUser.hasPermission(null)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
   }
@@ -729,24 +750,60 @@ class UserTest {
     }
   }
 
-  @Test
-  @DisplayName("should clear events after they are pulled")
-  void shouldClearEventsAfterTheyArePulled() {
-    // Arrange
-    when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-    when(passwordService.hash(credentials.newPassword())).thenReturn(hashes.updated());
-    when(passwordService.match(credentials.password(), hashes.initial())).thenReturn(true);
+  @Nested
+  @DisplayName("Object Contract")
+  class ObjectContractTest {
+    @Test
+    @DisplayName("should compare users based only on userId")
+    void shouldCompareUsersBasedOnlyOnUserId() {
+      // Arrange - Create users with same emails but different IDs
+      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
+      var user1 = User.register(credentials.email(), credentials.password(), passwordService);
+      var user2 = User.register(credentials.email(), credentials.password(), passwordService);
 
-    var user = User.register(credentials.email(), credentials.password(), passwordService);
-    user.changePassword(credentials.password(), credentials.newPassword(), passwordService);
-    user.assignRole(roles.adminRole());
+      assertThat(user1)
+          .isNotEqualTo(user2)
+          .isEqualTo(user1)
+          .isNotNull()
+          .isNotEqualTo(new Object())
+          .isNotEqualTo("Not a User");
+    }
 
-    // Act
-    var firstPull = user.pullEvents();
-    var secondPull = user.pullEvents();
+    @Test
+    @DisplayName("should have consistent hashCode based on userId")
+    void shouldHaveConsistentHashCodeBasedOnUserId() {
+      // Arrange
+      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
+      var user1 = User.register(credentials.email(), credentials.password(), passwordService);
+      var user1Copy = user1; // Same reference should have same hashCode
 
-    // Assert
-    assertThat(firstPull).hasSize(3);
-    assertThat(secondPull).isEmpty();
+      // Act & Assert
+      assertThat(user1).hasSameHashCodeAs(user1Copy);
+
+      // Different users should have different hashCodes (high probability)
+      var user2 = User.register(credentials.email(), credentials.password(), passwordService);
+      assertThat(user1)
+          .isNotEqualTo(user2)
+          .doesNotHaveSameHashCodeAs(user2);
+    }
+
+    @Test
+    @DisplayName("should provide a descriptive toString representation")
+    void shouldProvideDescriptiveToStringRepresentation() {
+      // Arrange
+      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
+      var user = User.register(credentials.email(), credentials.password(), passwordService);
+      user.assignRole(roles.adminRole());
+
+      // Act
+      var stringRepresentation = user.toString();
+
+      // Assert
+      assertThat(stringRepresentation)
+          .contains("User")
+          .contains(user.getId().toString())
+          .contains(credentials.email().toString())
+          .contains("roles=1"); // Should mention the count of roles
+    }
   }
 }
