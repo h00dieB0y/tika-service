@@ -3,7 +3,7 @@ package engineer.mkitsoukou.tika.domain.service;
 import engineer.mkitsoukou.tika.domain.model.valueobject.PasswordHash;
 import engineer.mkitsoukou.tika.domain.model.valueobject.PlainPassword;
 
-public interface PasswordService {
+public interface PasswordHasher {
 
   /**
    * Hashes a plain password.

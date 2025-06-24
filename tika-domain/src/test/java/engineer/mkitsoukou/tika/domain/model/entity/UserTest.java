@@ -3,7 +3,7 @@ package engineer.mkitsoukou.tika.domain.model.entity;
 import engineer.mkitsoukou.tika.domain.exception.*;
 import engineer.mkitsoukou.tika.domain.model.event.*;
 import engineer.mkitsoukou.tika.domain.model.valueobject.*;
-import engineer.mkitsoukou.tika.domain.service.PasswordService;
+import engineer.mkitsoukou.tika.domain.service.PasswordHasher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,7 +23,7 @@ import static org.mockito.Mockito.when;
 class UserTest {
 
   @Mock
-  private PasswordService passwordService;
+  private PasswordHasher passwordHasher;
   private UserCredentials credentials;
   private UserRoles roles;
   private PasswordHashes hashes;
@@ -61,12 +61,12 @@ class UserTest {
   @DisplayName("should clear events after they are pulled")
   void shouldClearEventsAfterTheyArePulled() {
     // Arrange
-    when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-    when(passwordService.hash(credentials.newPassword())).thenReturn(hashes.updated());
-    when(passwordService.match(credentials.password(), hashes.initial())).thenReturn(true);
+    when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+    when(passwordHasher.hash(credentials.newPassword())).thenReturn(hashes.updated());
+    when(passwordHasher.match(credentials.password(), hashes.initial())).thenReturn(true);
 
-    var user = User.register(credentials.email(), credentials.password(), passwordService);
-    user.changePassword(credentials.password(), credentials.newPassword(), passwordService);
+    var user = User.register(credentials.email(), credentials.password(), passwordHasher);
+    user.changePassword(credentials.password(), credentials.newPassword(), passwordHasher);
     user.assignRole(roles.adminRole());
 
     // Act
@@ -95,10 +95,10 @@ class UserTest {
     @DisplayName("should create user and emit UserRegistered event")
     void shouldCreateUserAndEmitRegisteredEvent() {
       // Arrange
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
 
       // Act
-      var user = User.register(credentials.email(), credentials.password(), passwordService);
+      var user = User.register(credentials.email(), credentials.password(), passwordHasher);
 
       // Assert properties
       assertThat(user.getId()).isNotNull();
@@ -120,7 +120,7 @@ class UserTest {
     @DisplayName("should reject registration with null email")
     void shouldRejectRegistrationWithNullEmail() {
       assertThatThrownBy(() ->
-          User.register(null, credentials.password(), passwordService)
+          User.register(null, credentials.password(), passwordHasher)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
 
@@ -128,7 +128,7 @@ class UserTest {
     @DisplayName("should reject registration with null password")
     void shouldRejectRegistrationWithNullPassword() {
       assertThatThrownBy(() ->
-          User.register(credentials.email(), null, passwordService)
+          User.register(credentials.email(), null, passwordHasher)
       ).isInstanceOf(EntityRequiredFieldException.class);
     }
 
@@ -144,7 +144,7 @@ class UserTest {
     @DisplayName("should reject registration with invalid email format")
     void shouldRejectRegistrationWithInvalidEmailFormat() {
       assertThatThrownBy(() ->
-          User.register(new Email("not-an-email"), credentials.password(), passwordService)
+          User.register(new Email("not-an-email"), credentials.password(), passwordHasher)
       ).isInstanceOf(InvalidEmailException.class);
     }
   }
@@ -156,8 +156,8 @@ class UserTest {
 
     @BeforeEach
     void prepareAuthenticatedUser() {
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordHasher);
       authenticatedUser.pullEvents();  // clear the registration event
     }
 
@@ -168,15 +168,15 @@ class UserTest {
       @DisplayName("should accept valid current password and emit PasswordChanged event")
       void shouldAcceptValidCurrentPasswordAndEmitEvent() {
         // Arrange
-        when(passwordService.match(credentials.password(), hashes.initial())).thenReturn(true);
-        when(passwordService.hash(credentials.newPassword())).thenReturn(hashes.updated());
+        when(passwordHasher.match(credentials.password(), hashes.initial())).thenReturn(true);
+        when(passwordHasher.hash(credentials.newPassword())).thenReturn(hashes.updated());
         var userId = authenticatedUser.getId();
 
         // Act
         authenticatedUser.changePassword(
             credentials.password(),
             credentials.newPassword(),
-            passwordService
+            passwordHasher
         );
 
         // Assert password updated
@@ -196,14 +196,14 @@ class UserTest {
       @DisplayName("should reject incorrect current password")
       void shouldRejectIncorrectCurrentPassword() {
         // Arrange
-        when(passwordService.match(credentials.password(), hashes.initial())).thenReturn(false);
+        when(passwordHasher.match(credentials.password(), hashes.initial())).thenReturn(false);
 
         // Act & Assert
         assertThatThrownBy(() ->
             authenticatedUser.changePassword(
                 credentials.password(),
                 credentials.newPassword(),
-                passwordService
+                passwordHasher
             )
         ).isInstanceOf(IncorrectPasswordException.class);
       }
@@ -212,7 +212,7 @@ class UserTest {
       @DisplayName("should reject null current password")
       void shouldRejectNullCurrentPassword() {
         assertThatThrownBy(() ->
-            authenticatedUser.changePassword(null, credentials.newPassword(), passwordService)
+            authenticatedUser.changePassword(null, credentials.newPassword(), passwordHasher)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -220,7 +220,7 @@ class UserTest {
       @DisplayName("should reject null new password")
       void shouldRejectNullNewPassword() {
         assertThatThrownBy(() ->
-            authenticatedUser.changePassword(credentials.password(), null, passwordService)
+            authenticatedUser.changePassword(credentials.password(), null, passwordHasher)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -240,11 +240,11 @@ class UserTest {
       @DisplayName("should reset password and emit PasswordChanged event")
       void shouldResetPasswordAndEmitEvent() {
         // Arrange
-        when(passwordService.hash(credentials.newPassword())).thenReturn(hashes.updated());
+        when(passwordHasher.hash(credentials.newPassword())).thenReturn(hashes.updated());
         var userId = authenticatedUser.getId();
 
         // Act
-        authenticatedUser.resetPassword(credentials.newPassword(), passwordService);
+        authenticatedUser.resetPassword(credentials.newPassword(), passwordHasher);
 
         // Assert password updated
         assertThat(authenticatedUser.getPasswordHash()).isEqualTo(hashes.updated());
@@ -263,7 +263,7 @@ class UserTest {
       @DisplayName("should reject null password")
       void shouldRejectNullPassword() {
         assertThatThrownBy(() ->
-            authenticatedUser.resetPassword(null, passwordService)
+            authenticatedUser.resetPassword(null, passwordHasher)
         ).isInstanceOf(EntityRequiredFieldException.class);
       }
 
@@ -284,8 +284,8 @@ class UserTest {
 
     @BeforeEach
     void prepareUserWithoutRoles() {
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordHasher);
       authenticatedUser.pullEvents();  // clear the registration event
     }
 
@@ -578,8 +578,8 @@ class UserTest {
 
     @BeforeEach
     void prepareUserWithoutPermissions() {
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordHasher);
       authenticatedUser.pullEvents();
 
       readPermission = new Permission("resource.read");
@@ -642,8 +642,8 @@ class UserTest {
 
     @BeforeEach
     void prepareActiveUser() {
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      authenticatedUser = User.register(credentials.email(), credentials.password(), passwordHasher);
       authenticatedUser.pullEvents();  // clear the registration event
     }
 
@@ -757,9 +757,9 @@ class UserTest {
     @DisplayName("should compare users based only on userId")
     void shouldCompareUsersBasedOnlyOnUserId() {
       // Arrange - Create users with same emails but different IDs
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      var user1 = User.register(credentials.email(), credentials.password(), passwordService);
-      var user2 = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      var user1 = User.register(credentials.email(), credentials.password(), passwordHasher);
+      var user2 = User.register(credentials.email(), credentials.password(), passwordHasher);
 
       assertThat(user1)
           .isNotEqualTo(user2)
@@ -773,15 +773,15 @@ class UserTest {
     @DisplayName("should have consistent hashCode based on userId")
     void shouldHaveConsistentHashCodeBasedOnUserId() {
       // Arrange
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      var user1 = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      var user1 = User.register(credentials.email(), credentials.password(), passwordHasher);
       var user1Copy = user1; // Same reference should have same hashCode
 
       // Act & Assert
       assertThat(user1).hasSameHashCodeAs(user1Copy);
 
       // Different users should have different hashCodes (high probability)
-      var user2 = User.register(credentials.email(), credentials.password(), passwordService);
+      var user2 = User.register(credentials.email(), credentials.password(), passwordHasher);
       assertThat(user1)
           .isNotEqualTo(user2)
           .doesNotHaveSameHashCodeAs(user2);
@@ -791,8 +791,8 @@ class UserTest {
     @DisplayName("should provide a descriptive toString representation")
     void shouldProvideDescriptiveToStringRepresentation() {
       // Arrange
-      when(passwordService.hash(credentials.password())).thenReturn(hashes.initial());
-      var user = User.register(credentials.email(), credentials.password(), passwordService);
+      when(passwordHasher.hash(credentials.password())).thenReturn(hashes.initial());
+      var user = User.register(credentials.email(), credentials.password(), passwordHasher);
       user.assignRole(roles.adminRole());
 
       // Act
