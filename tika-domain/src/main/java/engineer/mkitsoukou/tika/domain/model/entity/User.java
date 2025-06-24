@@ -14,7 +14,7 @@ import engineer.mkitsoukou.tika.domain.model.valueobject.PasswordHash;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.PlainPassword;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
-import engineer.mkitsoukou.tika.domain.service.PasswordService;
+import engineer.mkitsoukou.tika.domain.service.PasswordHasher;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -53,21 +53,21 @@ public final class User extends AbstractEntity {
    *
    * @param email           the email address of the new user
    * @param plainPassword   the plain text password of the new user
-   * @param passwordService service to hash passwords
+   * @param passwordHasher service to hash passwords
    * @return a new User instance
    * @throws EntityRequiredFieldException if any parameter is null
    */
   public static User register(
       Email email,
       PlainPassword plainPassword,
-      PasswordService passwordService
+      PasswordHasher passwordHasher
   ) {
     requireNonNull(email, "email");
     requireNonNull(plainPassword, "plainPassword");
-    requireNonNull(passwordService, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
     var newId = UserId.generate();
-    var hash = passwordService.hash(plainPassword);
+    var hash = passwordHasher.hash(plainPassword);
     var user = new User(newId, email, hash, Collections.emptySet());
     user.recordEvent(UserRegistered.createEvent(newId, email));
     return user;
@@ -78,24 +78,24 @@ public final class User extends AbstractEntity {
    *
    * @param oldPassword     the current password for verification
    * @param newPassword     the new password to set
-   * @param passwordService service to hash and verify passwords
+   * @param passwordHasher service to hash and verify passwords
    * @throws EntityRequiredFieldException if any parameter is null
    * @throws IncorrectPasswordException if old password is incorrect
    */
   public void changePassword(
       PlainPassword oldPassword,
       PlainPassword newPassword,
-      PasswordService passwordService
+      PasswordHasher passwordHasher
   ) {
     requireNonNull(oldPassword, "oldPassword");
     requireNonNull(newPassword, "newPassword");
-    requireNonNull(passwordService, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
-    if (!passwordService.match(oldPassword, passwordHash)) {
+    if (!passwordHasher.match(oldPassword, passwordHash)) {
       throw new IncorrectPasswordException();
     }
 
-    this.passwordHash = passwordService.hash(newPassword);
+    this.passwordHash = passwordHasher.hash(newPassword);
     recordEvent(PasswordChanged.createEvent(id));
   }
 
@@ -104,17 +104,17 @@ public final class User extends AbstractEntity {
    * This is typically used for administrative password resets or forgotten password flows.
    *
    * @param newPassword     the new password to set
-   * @param passwordService service to hash passwords
+   * @param passwordHasher service to hash passwords
    * @throws EntityRequiredFieldException if any parameter is null
    */
   public void resetPassword(
       PlainPassword newPassword,
-      PasswordService passwordService
+      PasswordHasher passwordHasher
   ) {
     requireNonNull(newPassword, "newPassword");
-    requireNonNull(passwordService, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
-    this.passwordHash = passwordService.hash(newPassword);
+    this.passwordHash = passwordHasher.hash(newPassword);
     recordEvent(PasswordChanged.createEvent(id));
   }
 
