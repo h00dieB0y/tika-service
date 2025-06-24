@@ -64,7 +64,7 @@ public final class User extends AbstractEntity {
   ) {
     requireNonNull(email, "email");
     requireNonNull(plainPassword, "plainPassword");
-    requireNonNull(passwordHasher, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
     var newId = UserId.generate();
     var hash = passwordHasher.hash(plainPassword);
@@ -89,7 +89,7 @@ public final class User extends AbstractEntity {
   ) {
     requireNonNull(oldPassword, "oldPassword");
     requireNonNull(newPassword, "newPassword");
-    requireNonNull(passwordHasher, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
     if (!passwordHasher.match(oldPassword, passwordHash)) {
       throw new IncorrectPasswordException();
@@ -112,7 +112,7 @@ public final class User extends AbstractEntity {
       PasswordHasher passwordHasher
   ) {
     requireNonNull(newPassword, "newPassword");
-    requireNonNull(passwordHasher, "passwordService");
+    requireNonNull(passwordHasher, "passwordHasher");
 
     this.passwordHash = passwordHasher.hash(newPassword);
     recordEvent(PasswordChanged.createEvent(id));
