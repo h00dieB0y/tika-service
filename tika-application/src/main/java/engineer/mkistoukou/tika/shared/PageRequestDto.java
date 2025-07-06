@@ -1,4 +1,4 @@
-package engineer.mkistoukou.tika.application.shared;
+package engineer.mkistoukou.tika.shared;
 
 import jakarta.validation.constraints.Min;
 
@@ -6,7 +6,7 @@ public record PageRequestDto(
     @Min(0) int page,
     @Min(1) int size,
     String sort,
-    Direction direction) {
+    Direction dir) {
 
 
   public static PageRequestDto of(int page, int size) {

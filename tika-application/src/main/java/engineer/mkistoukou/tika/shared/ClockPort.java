@@ -1,4 +1,4 @@
-package engineer.mkistoukou.tika.application.shared;
+package engineer.mkistoukou.tika.shared;
 
 import java.time.Instant;
 import java.time.ZoneId;
