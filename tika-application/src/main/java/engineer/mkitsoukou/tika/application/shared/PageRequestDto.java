@@ -1,4 +1,4 @@
-package engineer.mkistoukou.tika.application.shared;
+package engineer.mkitsoukou.tika.application.shared;
 
 import jakarta.validation.constraints.Min;
 

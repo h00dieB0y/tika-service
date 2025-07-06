@@ -1,11 +1,11 @@
-package engineer.mkistoukou.tika.application.shared;
+package engineer.mkitsoukou.tika.application.shared;
 
 import java.time.Instant;
 import java.time.ZoneId;
 
 public interface ClockPort {
   Instant now();
-  ZoneId zoneId();
+  ZoneId zone();
 
   ClockPort SYSTEM = new ClockPort() {
     @Override
@@ -14,7 +14,7 @@ public interface ClockPort {
     }
 
     @Override
-    public ZoneId zoneId() {
+    public ZoneId zone() {
       return ZoneId.systemDefault();
     }
   };

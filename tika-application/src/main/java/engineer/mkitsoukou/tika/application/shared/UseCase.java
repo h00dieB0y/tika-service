@@ -1,4 +1,4 @@
-package engineer.mkistoukou.tika.application.shared;
+package engineer.mkitsoukou.tika.application.shared;
 
 @FunctionalInterface
 public interface UseCase<I, O> {
