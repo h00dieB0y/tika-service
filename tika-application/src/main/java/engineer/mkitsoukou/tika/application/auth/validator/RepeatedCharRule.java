@@ -11,11 +11,12 @@ public record RepeatedCharRule(int maxRepeat) implements PasswordPolicyRule {
     int maxRun = 1;
     for (int i = 1; i < pwd.length(); i++) {
       run = (pwd.charAt(i) == pwd.charAt(i - 1)) ? run + 1 : 1;
+      if (run > maxRepeat) {
+        return new PasswordPolicyViolation("REPEAT",
+            "Character repetition > %d not allowed".formatted(maxRepeat));
+      }
       maxRun = Math.max(maxRun, run);
     }
-    return maxRun > maxRepeat
-        ? new PasswordPolicyViolation("REPEAT",
-        "Character repetition > %d not allowed".formatted(maxRepeat))
-        : PasswordPolicyViolation.OK;
+    return PasswordPolicyViolation.OK;
   }
 }
