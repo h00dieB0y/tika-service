@@ -54,6 +54,14 @@
       </exclusion>
     </exclusions>
   </dependency>
+
+  <!-- Password strength estimation -->
+  <dependency>
+    <groupId>com.nulab-inc</groupId>
+    <artifactId>zxcvbn</artifactId>
+    <version>1.4.0</version>
+  </dependency>
+
 </dependencies>
 
 </project>
