@@ -8,8 +8,9 @@ public record PageRequestDto(
     String sort,
     Direction dir) {
 
+  private static final String DEFAULT_SORT = "id";
 
   public static PageRequestDto of(int page, int size) {
-    return new PageRequestDto(page, size, "id", Direction.ASC);
+    return new PageRequestDto(page, size, DEFAULT_SORT, Direction.ASC);
   }
 }
