@@ -13,7 +13,7 @@ class ClockPortTest {
     Instant sysNow = ClockPort.SYSTEM.now();
     Instant after  = Instant.now();
 
-    assertThat(sysNow).isCloseTo(before, Duration.ofMillis(50));
+    assertThat(sysNow).isBetween(before.minusMillis(5), after.plusMillis(5));
     assertThat(ClockPort.SYSTEM.zone()).isEqualTo(ZoneId.systemDefault());
   }
 
