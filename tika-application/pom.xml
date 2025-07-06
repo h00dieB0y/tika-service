@@ -64,7 +64,6 @@
   <dependency>
     <groupId>engineer.mkitsoukou.tika</groupId>
     <artifactId>tika-domain</artifactId>
-    <scope>test</scope>
   </dependency>
 
 </dependencies>
