@@ -1,4 +1,4 @@
-package engineer.mkistoukou.tika.shared;
+package engineer.mkistoukou.tika.application.shared;
 
 import java.util.List;
 
