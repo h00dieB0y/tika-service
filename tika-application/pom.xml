@@ -65,6 +65,10 @@
     <groupId>engineer.mkitsoukou.tika</groupId>
     <artifactId>tika-domain</artifactId>
   </dependency>
+  <dependency>
+    <groupId>jakarta.transaction</groupId>
+    <artifactId>jakarta.transaction-api</artifactId>
+  </dependency>
 
 </dependencies>
 
