@@ -31,6 +31,7 @@ class PasswordPolicyValidatorTest {
   void repeatedCharactersShouldFail() {
     String repeated = "AAAAAbbbb1111!!!!";   // 4+ identical chars in a row
     assertThatThrownBy(() -> validator.validate(repeated))
+      .isInstanceOf(PasswordPolicyViolationException.class)
       .satisfies(ex -> assertThat(
         ((PasswordPolicyViolationException) ex).violations())
         .anyMatch(v -> "REPEAT".equals(v.code())));
