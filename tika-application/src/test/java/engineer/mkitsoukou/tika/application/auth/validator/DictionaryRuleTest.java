@@ -20,5 +20,6 @@ class DictionaryRuleTest {
     PasswordPolicyViolation v = rule.check("Password1");
     assertThat(v.isViolation()).isTrue();
     assertThat(v.code()).isEqualTo("ENTROPY");
+    assertThat(v.message()).contains("entropy score");
   }
 }
