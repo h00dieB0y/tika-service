@@ -135,6 +135,111 @@ class UserTest {
       user.pullEvents();
       assertThatThrownBy(() -> user.removeRole(admin, NOW)).isInstanceOf(NoRolesAssignedException.class);
     }
+
+    @Test @DisplayName("hasPermission returns true when user has role with permission")
+    void hasPermission_userHasRoleWithPermission_returnsTrue() {
+      user.assignRole(admin, NOW);
+      user.pullEvents();
+
+      var adminPermission = new Permission("admin.access");
+      assertThat(user.hasPermission(adminPermission)).isTrue();
+    }
+
+    @Test @DisplayName("hasPermission returns false when user lacks permission")
+    void hasPermission_userLacksPermission_returnsFalse() {
+      user.assignRole(reader, NOW);
+      user.pullEvents();
+
+      var adminPermission = new Permission("admin.access");
+      assertThat(user.hasPermission(adminPermission)).isFalse();
+    }
+
+    @Test @DisplayName("hasPermission returns true when user has any role with permission")
+    void hasPermission_userHasMultipleRolesOneWithPermission_returnsTrue() {
+      user.assignRoles(Set.of(admin, reader), NOW);
+      user.pullEvents();
+
+      var readerPermission = new Permission("resource.read");
+      assertThat(user.hasPermission(readerPermission)).isTrue();
+    }
+
+    @Test @DisplayName("hasPermission throws when permission is null")
+    void hasPermission_nullPermission_throws() {
+      user.assignRole(admin, NOW);
+      user.pullEvents();
+
+      assertThatThrownBy(() -> user.hasPermission(null))
+          .isInstanceOf(EntityRequiredFieldException.class);
+    }
+
+    @Test @DisplayName("removeRoles removes multiple roles and emits events")
+    void removeRoles_multiplRoles_removesAndEmitsEvents() {
+      var moderator = role("MODERATOR", "moderate.content");
+      user.assignRoles(Set.of(admin, reader, moderator), NOW);
+      user.pullEvents();
+
+      user.removeRoles(Set.of(admin, reader), NOW);
+
+      assertThat(user.hasRole(admin)).isFalse();
+      assertThat(user.hasRole(reader)).isFalse();
+      assertThat(user.hasRole(moderator)).isTrue();
+      assertThat(user.getRoles()).hasSize(1);
+
+      var events = user.pullEvents();
+      assertThat(events)
+          .hasSize(2)
+          .allMatch(RoleRemoved.class::isInstance);
+    }
+
+    @Test @DisplayName("removeRoles throws when removing all roles")
+    void removeRoles_removingAllRoles_throws() {
+      user.assignRoles(Set.of(admin, reader), NOW);
+      user.pullEvents();
+
+      var rolesToRemove = Set.of(admin, reader);
+      assertThatThrownBy(() -> user.removeRoles(rolesToRemove, NOW))
+          .isInstanceOf(NoRolesAssignedException.class);
+    }
+
+    @Test @DisplayName("removeRoles throws when removing too many roles")
+    void removeRoles_removingTooManyRoles_throws() {
+      var moderator = role("MODERATOR", "moderate.content");
+      user.assignRoles(Set.of(admin, reader, moderator), NOW);
+      user.pullEvents();
+
+      var rolesToRemove = Set.of(admin, reader, moderator);
+      assertThatThrownBy(() -> user.removeRoles(rolesToRemove, NOW))
+          .isInstanceOf(NoRolesAssignedException.class);
+    }
+
+    @Test @DisplayName("removeRoles throws when role not assigned")
+    void removeRoles_roleNotAssigned_throws() {
+      user.assignRole(admin, NOW);
+      user.pullEvents();
+
+      var rolesToRemove = Set.of(reader);
+      assertThatThrownBy(() -> user.removeRoles(rolesToRemove, NOW))
+          .isInstanceOf(RoleNotFoundException.class);
+    }
+
+    @Test @DisplayName("removeRoles throws when roles parameter is null")
+    void removeRoles_nullRoles_throws() {
+      user.assignRole(admin, NOW);
+      user.pullEvents();
+
+      assertThatThrownBy(() -> user.removeRoles(null, NOW))
+          .isInstanceOf(EntityRequiredFieldException.class);
+    }
+
+    @Test @DisplayName("removeRoles throws when now parameter is null")
+    void removeRoles_nullNow_throws() {
+      user.assignRoles(Set.of(admin, reader), NOW);
+      user.pullEvents();
+
+      var rolesToRemove = Set.of(admin);
+      assertThatThrownBy(() -> user.removeRoles(rolesToRemove, null))
+          .isInstanceOf(EntityRequiredFieldException.class);
+    }
   }
 
   @Nested @DisplayName("Activation")
