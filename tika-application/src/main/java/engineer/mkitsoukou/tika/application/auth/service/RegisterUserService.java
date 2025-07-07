@@ -16,6 +16,7 @@ import jakarta.transaction.Transactional;
 import engineer.mkitsoukou.tika.application.auth.port.in.RegisterUserUseCase;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Orchestrates user registration:
@@ -39,11 +40,11 @@ public RegisterUserService(
       PasswordHasher passwordHasher,
       EventPublisherPort events,
       ClockPort clock) {
-    this.userRepo = userRepo;
-    this.passwordPolicy = passwordPolicy;
-    this.passwordHasher = passwordHasher;
-    this.events = events;
-    this.clock = clock;
+    this.userRepo = Objects.requireNonNull(userRepo, "userRepo must not be null");
+    this.passwordPolicy = Objects.requireNonNull(passwordPolicy, "passwordPolicy must not be null");
+    this.passwordHasher = Objects.requireNonNull(passwordHasher, "passwordHasher must not be null");
+    this.events = Objects.requireNonNull(events, "events must not be null");
+    this.clock = Objects.requireNonNull(clock, "clock must not be null");
   }
 
   @Override
