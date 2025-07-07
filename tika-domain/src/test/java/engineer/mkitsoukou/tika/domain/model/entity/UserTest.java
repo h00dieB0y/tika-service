@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,9 +66,10 @@ class UserTest {
     when(passwordHasher.hash(credentials.newPassword())).thenReturn(hashes.updated());
     when(passwordHasher.match(credentials.password(), hashes.initial())).thenReturn(true);
 
-    var user = User.register(credentials.email(), credentials.password(), passwordHasher);
-    user.changePassword(credentials.password(), credentials.newPassword(), passwordHasher);
-    user.assignRole(roles.adminRole());
+    Instant now = Instant.now();
+    var user = User.register(credentials.email(), credentials.password(), passwordHasher, now);
+    user.changePassword(credentials.password(), credentials.newPassword(), passwordHasher, now);
+    user.assignRole(roles.adminRole(), now);
 
     // Act
     var firstPull = user.pullEvents();

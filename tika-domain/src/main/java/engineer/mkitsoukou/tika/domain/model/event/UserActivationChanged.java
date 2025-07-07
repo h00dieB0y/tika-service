@@ -1,6 +1,7 @@
 package engineer.mkitsoukou.tika.domain.model.event;
 
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -10,8 +11,8 @@ public class UserActivationChanged extends AbstractDomainEvent {
   private final UserId userId;
   private final boolean isActive;
 
-  public UserActivationChanged(UserId userId, boolean isActive) {
-    super();
+  public UserActivationChanged(UserId userId, boolean isActive, Instant occurredAt) {
+    super(occurredAt);
     this.userId = requireNonNull(userId, "userId");
     this.isActive = isActive;
   }
@@ -21,10 +22,24 @@ public class UserActivationChanged extends AbstractDomainEvent {
    *
    * @param userId the ID of the user whose activation status changed
    * @param isActive the new activation status
+   * @param occurredAt the timestamp when the event occurred
    * @return a new UserActivationChanged event
    */
+  public static UserActivationChanged createEvent(UserId userId, boolean isActive, Instant occurredAt) {
+    return new UserActivationChanged(userId, isActive, occurredAt);
+  }
+
+  /**
+   * Creates a new UserActivationChanged event with current timestamp.
+   *
+   * @deprecated Use {@link #createEvent(UserId, boolean, Instant)} with explicit timestamp for deterministic behavior
+   * @param userId the ID of the user whose activation status changed
+   * @param isActive the new activation status
+   * @return a new UserActivationChanged event
+   */
+  @Deprecated(since = "0.1.0", forRemoval = true)
   public static UserActivationChanged createEvent(UserId userId, boolean isActive) {
-    return new UserActivationChanged(userId, isActive);
+    return createEvent(userId, isActive, Instant.now());
   }
 
   public UserId getUserId() {

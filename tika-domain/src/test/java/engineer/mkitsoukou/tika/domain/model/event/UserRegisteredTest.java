@@ -4,6 +4,7 @@ import engineer.mkitsoukou.tika.domain.model.valueobject.Email;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,45 +15,51 @@ class UserRegisteredTest {
   void createUserRegisteredEvent() {
     UserId userId = UserId.of(UUID.randomUUID());
     Email email = new Email("alice@example.com");
+    Instant now = Instant.now();
 
-    UserRegistered event = new UserRegistered(userId, email);
+    UserRegistered event = new UserRegistered(userId, email, now);
 
     assertEquals(userId, event.getUserId());
     assertEquals(email,  event.getEmail());
-    assertNotNull(event.occurredAt());
+    assertEquals(now, event.occurredAt());
   }
 
   @Test
   void factoryMethodCreatesEquivalentEvent() {
     UserId userId = UserId.of(UUID.randomUUID());
     Email email = new Email("bob@example.com");
+    Instant now = Instant.now();
 
-    UserRegistered evt1 = new UserRegistered(userId, email);
-    UserRegistered evt2 = UserRegistered.createEvent(userId, email);
+    UserRegistered evt1 = new UserRegistered(userId, email, now);
+    UserRegistered evt2 = UserRegistered.createEvent(userId, email, now);
 
     assertEquals(evt1.getUserId(), evt2.getUserId());
     assertEquals(evt1.getEmail(),  evt2.getEmail());
+    assertEquals(evt1.occurredAt(), evt2.occurredAt());
   }
 
   @Test
   void throwsExceptionWhenUserIdIsNull() {
     Email email = new Email("charlie@example.com");
-    assertThrows(NullPointerException.class, () -> new UserRegistered(null, email));
+    Instant now = Instant.now();
+    assertThrows(NullPointerException.class, () -> new UserRegistered(null, email, now));
   }
 
   @Test
   void throwsExceptionWhenEmailIsNull() {
     UserId userId = UserId.of(UUID.randomUUID());
-    assertThrows(NullPointerException.class, () -> new UserRegistered(userId, null));
+    Instant now = Instant.now();
+    assertThrows(NullPointerException.class, () -> new UserRegistered(userId, null, now));
   }
 
   @Test
   void equalsAndHashCodeWork() {
     UserId userId = UserId.of(UUID.randomUUID());
     Email email = new Email("dana@example.com");
+    Instant now = Instant.now();
 
-    UserRegistered e1 = new UserRegistered(userId, email);
-    UserRegistered e2 = new UserRegistered(userId, email);
+    UserRegistered e1 = new UserRegistered(userId, email, now);
+    UserRegistered e2 = new UserRegistered(userId, email, now);
 
     assertEquals(e1, e2);
     assertEquals(e1.hashCode(), e2.hashCode());
@@ -64,10 +71,11 @@ class UserRegisteredTest {
     UserId id2 = UserId.of(UUID.randomUUID());
     Email e1 = new Email("e1@example.com");
     Email e2 = new Email("e2@example.com");
+    Instant now = Instant.now();
 
-    UserRegistered ev1 = new UserRegistered(id1, e1);
-    UserRegistered ev2 = new UserRegistered(id2, e1);
-    UserRegistered ev3 = new UserRegistered(id1, e2);
+    UserRegistered ev1 = new UserRegistered(id1, e1, now);
+    UserRegistered ev2 = new UserRegistered(id2, e1, now);
+    UserRegistered ev3 = new UserRegistered(id1, e2, now);
 
     assertNotEquals(ev1, ev2);
     assertNotEquals(ev1, ev3);
@@ -78,7 +86,8 @@ class UserRegisteredTest {
   void toStringContainsRelevantInformation() {
     UserId userId = UserId.of(UUID.randomUUID());
     Email email = new Email("frank@example.com");
-    UserRegistered event = new UserRegistered(userId, email);
+    Instant now = Instant.now();
+    UserRegistered event = new UserRegistered(userId, email, now);
 
     String s = event.toString();
     assertTrue(s.contains("UserRegistered"));
