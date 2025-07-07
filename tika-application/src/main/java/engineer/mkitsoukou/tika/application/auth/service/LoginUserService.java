@@ -66,7 +66,7 @@ public class LoginUserService implements LoginUserUseCase {
       throw new InvalidCredentialsException();
     }
 
-    rateLimiter.recordSuccessfulLogin(tokens.accessToken());
+    rateLimiter.recordSuccessfulLogin(command.email());
 
     return tokens;
   }
