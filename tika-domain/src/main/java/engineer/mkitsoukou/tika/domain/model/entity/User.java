@@ -15,6 +15,7 @@ import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.PlainPassword;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 import engineer.mkitsoukou.tika.domain.service.PasswordHasher;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -54,22 +55,25 @@ public final class User extends AbstractEntity {
    * @param email           the email address of the new user
    * @param plainPassword   the plain text password of the new user
    * @param passwordHasher service to hash passwords
+   * @param now            the timestamp when the registration occurred
    * @return a new User instance
    * @throws EntityRequiredFieldException if any parameter is null
    */
   public static User register(
       Email email,
       PlainPassword plainPassword,
-      PasswordHasher passwordHasher
+      PasswordHasher passwordHasher,
+      Instant now
   ) {
     requireNonNull(email, "email");
     requireNonNull(plainPassword, "plainPassword");
     requireNonNull(passwordHasher, "passwordHasher");
+    requireNonNull(now, "now");
 
     var newId = UserId.generate();
     var hash = passwordHasher.hash(plainPassword);
     var user = new User(newId, email, hash, Collections.emptySet());
-    user.recordEvent(UserRegistered.createEvent(newId, email));
+    user.recordEvent(UserRegistered.createEvent(newId, email, now));
     return user;
   }
 
@@ -79,24 +83,27 @@ public final class User extends AbstractEntity {
    * @param oldPassword     the current password for verification
    * @param newPassword     the new password to set
    * @param passwordHasher service to hash and verify passwords
+   * @param now            the timestamp when the password was changed
    * @throws EntityRequiredFieldException if any parameter is null
    * @throws IncorrectPasswordException if old password is incorrect
    */
   public void changePassword(
       PlainPassword oldPassword,
       PlainPassword newPassword,
-      PasswordHasher passwordHasher
+      PasswordHasher passwordHasher,
+      Instant now
   ) {
     requireNonNull(oldPassword, "oldPassword");
     requireNonNull(newPassword, "newPassword");
     requireNonNull(passwordHasher, "passwordHasher");
+    requireNonNull(now, "now");
 
     if (!passwordHasher.match(oldPassword, passwordHash)) {
       throw new IncorrectPasswordException();
     }
 
     this.passwordHash = passwordHasher.hash(newPassword);
-    recordEvent(PasswordChanged.createEvent(id));
+    recordEvent(PasswordChanged.createEvent(id, now));
   }
 
   /**
@@ -105,30 +112,35 @@ public final class User extends AbstractEntity {
    *
    * @param newPassword     the new password to set
    * @param passwordHasher service to hash passwords
+   * @param now            the timestamp when the password was reset
    * @throws EntityRequiredFieldException if any parameter is null
    */
   public void resetPassword(
       PlainPassword newPassword,
-      PasswordHasher passwordHasher
+      PasswordHasher passwordHasher,
+      Instant now
   ) {
     requireNonNull(newPassword, "newPassword");
     requireNonNull(passwordHasher, "passwordHasher");
+    requireNonNull(now, "now");
 
     this.passwordHash = passwordHasher.hash(newPassword);
-    recordEvent(PasswordChanged.createEvent(id));
+    recordEvent(PasswordChanged.createEvent(id, now));
   }
 
   /**
    * Assigns a role to the user if not already assigned.
    *
    * @param role the role to assign
+   * @param now  the timestamp when the role was assigned
    * @throws EntityRequiredFieldException if the role is null
    */
-  public void assignRole(Role role) {
+  public void assignRole(Role role, Instant now) {
     requireNonNull(role, "role");
+    requireNonNull(now, "now");
 
     if (roles.add(role)) {
-      recordEvent(RoleAssigned.createEvent(id, role.getRoleId()));
+      recordEvent(RoleAssigned.createEvent(id, role.getRoleId(), now));
     }
   }
 
@@ -136,12 +148,14 @@ public final class User extends AbstractEntity {
    * Removes a role from the user.
    *
    * @param role the role to remove
+   * @param now  the timestamp when the role was removed
    * @throws EntityRequiredFieldException if the role is null
    * @throws RoleNotFoundException if the role is not assigned to the user
    * @throws NoRolesAssignedException if removing this role would leave the user without any roles
    */
-  public void removeRole(Role role) {
+  public void removeRole(Role role, Instant now) {
     requireNonNull(role, "role");
+    requireNonNull(now, "now");
 
     if (!roles.contains(role)) {
       throw new RoleNotFoundException(role.getRoleId().toString());
@@ -152,7 +166,7 @@ public final class User extends AbstractEntity {
     }
 
     roles.remove(role);
-    recordEvent(RoleRemoved.createEvent(id, role.getRoleId()));
+    recordEvent(RoleRemoved.createEvent(id, role.getRoleId(), now));
   }
 
   /**
@@ -162,13 +176,15 @@ public final class User extends AbstractEntity {
    * but with better performance since it processes them as a batch.
    *
    * @param rolesToAssign the set of roles to assign
+   * @param now           the timestamp when the roles were assigned
    * @throws EntityRequiredFieldException if the roles parameter is null
    */
-  public void assignRoles(Set<Role> rolesToAssign) {
+  public void assignRoles(Set<Role> rolesToAssign, Instant now) {
     requireNonNull(rolesToAssign, "rolesToAssign");
+    requireNonNull(now, "now");
 
     for (Role role : rolesToAssign) {
-      assignRole(role);
+      assignRole(role, now);
     }
   }
 
@@ -185,13 +201,15 @@ public final class User extends AbstractEntity {
    *</p>
    *
    * @param rolesToRemove the set of roles to remove
+   * @param now           the timestamp when the roles were removed
    *
    * @throws EntityRequiredFieldException if the roles parameter is null
    * @throws NoRolesAssignedException if removing these roles would leave the user without any roles
    * @throws RoleNotFoundException if any of the roles is not assigned to this user
    */
-  public void removeRoles(Set<Role> rolesToRemove) {
+  public void removeRoles(Set<Role> rolesToRemove, Instant now) {
     requireNonNull(rolesToRemove, "rolesToRemove");
+    requireNonNull(now, "now");
 
     // Check that all roles exist
     for (Role role : rolesToRemove) {
@@ -208,7 +226,7 @@ public final class User extends AbstractEntity {
     // Remove all roles
     for (Role role : rolesToRemove) {
       roles.remove(role);
-      recordEvent(RoleRemoved.createEvent(id, role.getRoleId()));
+      recordEvent(RoleRemoved.createEvent(id, role.getRoleId(), now));
     }
   }
 
@@ -283,18 +301,24 @@ public final class User extends AbstractEntity {
 
   /**
    * Activates the user, allowing them to log in and perform actions.
+   *
+   * @param now the timestamp when the user was activated
    */
-  public void activate() {
+  public void activate(Instant now) {
+    requireNonNull(now, "now");
     this.active = true;
-    recordEvent(UserActivationChanged.createEvent(id, true));
+    recordEvent(UserActivationChanged.createEvent(id, true, now));
   }
 
   /**
-   * Deactivates the user, preventing them from logging in or performing actions.
+   * Desactivates the user, preventing them from logging in or performing actions.
+   *
+   * @param now the timestamp when the user was deactivated
    */
-  public void deactivate() {
+  public void desactivate(Instant now) {
+    requireNonNull(now, "now");
     this.active = false;
-    recordEvent(UserActivationChanged.createEvent(id, false));
+    recordEvent(UserActivationChanged.createEvent(id, false, now));
   }
 
   @Override

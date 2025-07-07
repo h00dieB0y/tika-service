@@ -10,15 +10,7 @@ public abstract class AbstractDomainEvent implements DomainEvent {
   private final Instant occurredAt;
 
   /**
-   * Constructs a new domain event with the current timestamp.
-   */
-  protected AbstractDomainEvent() {
-    this.occurredAt = Instant.now();
-  }
-
-  /**
    * Constructs a domain event with a specific timestamp.
-   * Primarily used for testing or event replay scenarios.
    *
    * @param occurredAt the timestamp when the event occurred
    */

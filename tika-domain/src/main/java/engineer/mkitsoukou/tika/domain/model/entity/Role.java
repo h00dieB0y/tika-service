@@ -8,6 +8,7 @@ import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleName;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
@@ -87,13 +88,15 @@ public final class Role extends AbstractEntity {
    * If the permission is already assigned, no action is taken.
    *
    * @param permission the permission to add
+   * @param now        the timestamp when the permission was added
    * @throws EntityRequiredFieldException if the permission is null
    */
-  public void addPermission(Permission permission) {
+  public void addPermission(Permission permission, Instant now) {
     requireNonNull(permission, "permission");
+    requireNonNull(now, "now");
 
     if (permissions.add(permission)) {
-      recordEvent(PermissionAdded.createEvent(roleId, permission));
+      recordEvent(PermissionAdded.createEvent(roleId, permission, now));
     }
   }
 
@@ -101,12 +104,14 @@ public final class Role extends AbstractEntity {
    * Removes a permission from this role.
    *
    * @param permission the permission to remove
+   * @param now        the timestamp when the permission was removed
    * @throws EntityRequiredFieldException if the permission is null
    * @throws EmptyRoleException if removing this permission would leave the role with no permissions
    * @throws PermissionNotFoundException if the permission is not assigned to this role
    */
-  public void removePermission(Permission permission) {
+  public void removePermission(Permission permission, Instant now) {
     requireNonNull(permission, "permission");
+    requireNonNull(now, "now");
 
     if (!permissions.contains(permission)) {
       throw new PermissionNotFoundException(permission.toString());
@@ -117,7 +122,7 @@ public final class Role extends AbstractEntity {
     }
 
     permissions.remove(permission);
-    recordEvent(PermissionRemoved.createEvent(roleId, permission));
+    recordEvent(PermissionRemoved.createEvent(roleId, permission, now));
   }
 
   /**
@@ -127,14 +132,16 @@ public final class Role extends AbstractEntity {
    * but with better performance since it processes them as a batch.
    *
    * @param permissions the set of permissions to add
+   * @param now         the timestamp when the permissions were added
    * @throws EntityRequiredFieldException if the permissions parameter is null
    * @throws EmptyRoleException if permissions set is empty
    */
-  public void addPermissions(Set<Permission> permissions) {
+  public void addPermissions(Set<Permission> permissions, Instant now) {
     requireNonNull(permissions, "permissions");
+    requireNonNull(now, "now");
 
     for (Permission permission : permissions) {
-      addPermission(permission);
+      addPermission(permission, now);
     }
   }
 
@@ -151,13 +158,15 @@ public final class Role extends AbstractEntity {
    *</p>
    *
    * @param permissions the set of permissions to remove
+   * @param now         the timestamp when the permissions were removed
    *
    * @throws EntityRequiredFieldException if the permissions parameter is null
    * @throws EmptyRoleException if removing these permissions would leave the role with no permissions
    * @throws PermissionNotFoundException if any of the permissions is not assigned to this role
    */
-  public void removePermissions(Set<Permission> permissions) {
+  public void removePermissions(Set<Permission> permissions, Instant now) {
     requireNonNull(permissions, "permissions");
+    requireNonNull(now, "now");
 
     // Check that all permissions exist
     for (Permission permission : permissions) {
@@ -173,9 +182,10 @@ public final class Role extends AbstractEntity {
 
     // Remove all permissions
     for (Permission permission : permissions) {
-      removePermission(permission);
+      removePermission(permission, now);
     }
   }
+
 
   /**
    * Checks if this role has a specific permission.
