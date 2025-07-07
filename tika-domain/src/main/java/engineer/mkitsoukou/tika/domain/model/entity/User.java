@@ -78,25 +78,6 @@ public final class User extends AbstractEntity {
   }
 
   /**
-   * Factory method to register a new user with the given email and password using current timestamp.
-   *
-   * @deprecated Use {@link #register(Email, PlainPassword, PasswordHasher, Instant)} with explicit timestamp for deterministic behavior
-   * @param email           the email address of the new user
-   * @param plainPassword   the plain text password of the new user
-   * @param passwordHasher service to hash passwords
-   * @return a new User instance
-   * @throws EntityRequiredFieldException if any parameter is null
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public static User register(
-      Email email,
-      PlainPassword plainPassword,
-      PasswordHasher passwordHasher
-  ) {
-    return register(email, plainPassword, passwordHasher, Instant.now());
-  }
-
-  /**
    * Changes the user's password after verifying the old password.
    *
    * @param oldPassword     the current password for verification
@@ -126,25 +107,6 @@ public final class User extends AbstractEntity {
   }
 
   /**
-   * Changes the user's password after verifying the old password using current timestamp.
-   *
-   * @deprecated Use {@link #changePassword(PlainPassword, PlainPassword, PasswordHasher, Instant)} with explicit timestamp for deterministic behavior
-   * @param oldPassword     the current password for verification
-   * @param newPassword     the new password to set
-   * @param passwordHasher service to hash and verify passwords
-   * @throws EntityRequiredFieldException if any parameter is null
-   * @throws IncorrectPasswordException if old password is incorrect
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void changePassword(
-      PlainPassword oldPassword,
-      PlainPassword newPassword,
-      PasswordHasher passwordHasher
-  ) {
-    changePassword(oldPassword, newPassword, passwordHasher, Instant.now());
-  }
-
-  /**
    * Resets the user's password directly without requiring the old password.
    * This is typically used for administrative password resets or forgotten password flows.
    *
@@ -167,22 +129,6 @@ public final class User extends AbstractEntity {
   }
 
   /**
-   * Resets the user's password directly without requiring the old password using current timestamp.
-   *
-   * @deprecated Use {@link #resetPassword(PlainPassword, PasswordHasher, Instant)} with explicit timestamp for deterministic behavior
-   * @param newPassword     the new password to set
-   * @param passwordHasher service to hash passwords
-   * @throws EntityRequiredFieldException if any parameter is null
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void resetPassword(
-      PlainPassword newPassword,
-      PasswordHasher passwordHasher
-  ) {
-    resetPassword(newPassword, passwordHasher, Instant.now());
-  }
-
-  /**
    * Assigns a role to the user if not already assigned.
    *
    * @param role the role to assign
@@ -196,18 +142,6 @@ public final class User extends AbstractEntity {
     if (roles.add(role)) {
       recordEvent(RoleAssigned.createEvent(id, role.getRoleId(), now));
     }
-  }
-
-  /**
-   * Assigns a role to the user if not already assigned using current timestamp.
-   *
-   * @deprecated Use {@link #assignRole(Role, Instant)} with explicit timestamp for deterministic behavior
-   * @param role the role to assign
-   * @throws EntityRequiredFieldException if the role is null
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void assignRole(Role role) {
-    assignRole(role, Instant.now());
   }
 
   /**
@@ -236,20 +170,6 @@ public final class User extends AbstractEntity {
   }
 
   /**
-   * Removes a role from the user using current timestamp.
-   *
-   * @deprecated Use {@link #removeRole(Role, Instant)} with explicit timestamp for deterministic behavior
-   * @param role the role to remove
-   * @throws EntityRequiredFieldException if the role is null
-   * @throws RoleNotFoundException if the role is not assigned to the user
-   * @throws NoRolesAssignedException if removing this role would leave the user without any roles
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void removeRole(Role role) {
-    removeRole(role, Instant.now());
-  }
-
-  /**
    * Assigns multiple roles to the user at once.
    * Only roles that are not already assigned will be added.
    * This method is a bulk operation equivalent to calling assignRole() for each role,
@@ -266,18 +186,6 @@ public final class User extends AbstractEntity {
     for (Role role : rolesToAssign) {
       assignRole(role, now);
     }
-  }
-
-  /**
-   * Assigns multiple roles to the user at once using current timestamp.
-   *
-   * @deprecated Use {@link #assignRoles(Set, Instant)} with explicit timestamp for deterministic behavior
-   * @param rolesToAssign the set of roles to assign
-   * @throws EntityRequiredFieldException if the roles parameter is null
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void assignRoles(Set<Role> rolesToAssign) {
-    assignRoles(rolesToAssign, Instant.now());
   }
 
   /**
@@ -320,20 +228,6 @@ public final class User extends AbstractEntity {
       roles.remove(role);
       recordEvent(RoleRemoved.createEvent(id, role.getRoleId(), now));
     }
-  }
-
-  /**
-   * Removes multiple roles from the user at once using current timestamp.
-   *
-   * @deprecated Use {@link #removeRoles(Set, Instant)} with explicit timestamp for deterministic behavior
-   * @param rolesToRemove the set of roles to remove
-   * @throws EntityRequiredFieldException if the roles parameter is null
-   * @throws NoRolesAssignedException if removing these roles would leave the user without any roles
-   * @throws RoleNotFoundException if any of the roles is not assigned to this user
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void removeRoles(Set<Role> rolesToRemove) {
-    removeRoles(rolesToRemove, Instant.now());
   }
 
   /**
@@ -417,34 +311,14 @@ public final class User extends AbstractEntity {
   }
 
   /**
-   * Activates the user, allowing them to log in and perform actions using current timestamp.
-   *
-   * @deprecated Use {@link #activate(Instant)} with explicit timestamp for deterministic behavior
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void activate() {
-    activate(Instant.now());
-  }
-
-  /**
-   * Deactivates the user, preventing them from logging in or performing actions.
+   * Desactivates the user, preventing them from logging in or performing actions.
    *
    * @param now the timestamp when the user was deactivated
    */
-  public void deactivate(Instant now) {
+  public void desactivate(Instant now) {
     requireNonNull(now, "now");
     this.active = false;
     recordEvent(UserActivationChanged.createEvent(id, false, now));
-  }
-
-  /**
-   * Deactivates the user, preventing them from logging in or performing actions using current timestamp.
-   *
-   * @deprecated Use {@link #deactivate(Instant)} with explicit timestamp for deterministic behavior
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void deactivate() {
-    deactivate(Instant.now());
   }
 
   @Override
