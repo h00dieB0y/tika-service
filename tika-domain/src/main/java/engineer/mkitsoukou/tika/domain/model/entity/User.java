@@ -98,7 +98,7 @@ public final class User extends AbstractEntity {
     requireNonNull(passwordHasher, "passwordHasher");
     requireNonNull(now, "now");
 
-    if (!passwordHasher.match(oldPassword, passwordHash)) {
+    if (!passwordHasher.matches(oldPassword, passwordHash)) {
       throw new IncorrectPasswordException();
     }
 

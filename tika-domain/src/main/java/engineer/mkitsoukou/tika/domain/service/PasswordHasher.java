@@ -20,5 +20,5 @@ public interface PasswordHasher {
    * @param hash the hashed password to match against
    * @return true if the passwords match, false otherwise
    */
-  boolean match(PlainPassword plain, PasswordHash hash);
+  boolean matches(PlainPassword plain, PasswordHash hash);
 }

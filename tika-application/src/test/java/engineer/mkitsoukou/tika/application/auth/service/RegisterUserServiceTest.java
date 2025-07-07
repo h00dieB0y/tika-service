@@ -202,7 +202,7 @@ class RegisterUserServiceTest {
     }
 
     @Override
-    public boolean match(PlainPassword pw, PasswordHash h) {
+    public boolean matches(PlainPassword pw, PasswordHash h) {
       return h.hash().equals("$2" + pw.clearText());
     }
   }
