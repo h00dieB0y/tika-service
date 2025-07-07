@@ -48,7 +48,7 @@ class UserTest {
     @Test @DisplayName("register emits UserRegistered & hashes pwd")
     void register_emits() {
       var user = User.register(fixtures.email, fixtures.pwd, hasher, NOW);
-      assertThat(user.getPasswordHash()).isEqualTo(new PasswordHash("hash:" + fixtures.pwd.clearText()));
+      assertThat(user.getPasswordHash()).isEqualTo(new PasswordHash("$2" + fixtures.pwd.clearText()));
       var events = user.pullEvents();
       assertThat(events).singleElement().isInstanceOf(UserRegistered.class);
     }
