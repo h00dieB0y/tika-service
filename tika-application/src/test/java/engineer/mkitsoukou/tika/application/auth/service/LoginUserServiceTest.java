@@ -203,4 +203,31 @@ public class LoginUserServiceTest {
     assertThat(dto.refreshToken()).isNotBlank();
     assertThat(dto.expiresAt()).isAfter(clock.now());
   }
+
+  @Test
+  void blacklistedTokenShouldThrowInvalidCredentials() {
+
+    JwtIssuerPort blkIssuer = new JwtIssuerPort() {
+      @Override public AuthTokensDto issueTokens(User user, Instant now) {
+        return new AuthTokensDto("AT-BLK", "RT-"+user.getId(), now.plus(Duration.ofMinutes(15)));
+      }
+    };
+
+    /* Fake blacklist flags that specific token as revoked  */
+    TokenBlacklistPort blkList = "AT-BLK"::equals;
+
+    LoginUserService svc = new LoginUserService(
+      repo,
+      hasher,
+      blkIssuer,
+      blkList,
+      limiter,
+      clock);
+
+    LoginUserCommand cmd = new LoginUserCommand("active@example.com", STRONG_PWD);
+
+    assertThatThrownBy(() -> svc.execute(cmd))
+      .isInstanceOf(InvalidCredentialsException.class);
+  }
+
 }
