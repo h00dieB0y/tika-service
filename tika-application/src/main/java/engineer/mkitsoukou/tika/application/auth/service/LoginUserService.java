@@ -2,6 +2,8 @@ package engineer.mkitsoukou.tika.application.auth.service;
 
 import engineer.mkitsoukou.tika.application.auth.command.LoginUserCommand;
 import engineer.mkitsoukou.tika.application.auth.dto.AuthTokensDto;
+import engineer.mkitsoukou.tika.application.auth.exception.InvalidCredentialsException;
+import engineer.mkitsoukou.tika.application.auth.exception.UserInactiveException;
 import engineer.mkitsoukou.tika.application.auth.port.in.LoginUserUseCase;
 import engineer.mkitsoukou.tika.application.auth.port.out.JwtIssuerPort;
 import engineer.mkitsoukou.tika.application.auth.port.out.RateLimiterPort;
@@ -46,22 +48,22 @@ public class LoginUserService implements LoginUserUseCase {
 
     Email email = new Email(command.email());
     User user = userRepo.findByEmail(email)
-        .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
+        .orElseThrow(InvalidCredentialsException::new);
 
     if (!user.isActive()) {
-      throw new IllegalStateException("User account is not active: " + email);
+      throw new UserInactiveException();
     }
 
     PlainPassword plain = new PlainPassword(command.password());
 
     if (!hasher.matches(plain, user.getPasswordHash())) {
-      throw new IllegalArgumentException("Invalid password for user: " + email);
+      throw new InvalidCredentialsException();
     }
 
     AuthTokensDto tokens = jwtIssuer.issueTokens(user, clock.now());
 
     if (blacklist.isBlacklisted(tokens.accessToken())) {
-      throw new IllegalStateException("Access token is blacklisted: " + tokens.accessToken());
+      throw new InvalidCredentialsException();
     }
 
     rateLimiter.recordSuccessfulLogin(tokens.accessToken());
