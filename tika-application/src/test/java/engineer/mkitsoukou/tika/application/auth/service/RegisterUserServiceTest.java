@@ -76,7 +76,7 @@ class RegisterUserServiceTest {
     UserDto dto = service.execute(cmd);
 
     // repository size
-    assertThat(repo.size()).isEqualTo(1);
+    assertThat(repo.count()).isEqualTo(1);
     // DTO mapping
     assertThat(dto.email()).isEqualTo("alice@example.com");
     // event published once
@@ -90,7 +90,7 @@ class RegisterUserServiceTest {
         "user" + i + "@example.com", "C0mpl3xPwd@" + i);
       service.execute(c);
     });
-    assertThat(repo.size()).isEqualTo(10);
+    assertThat(repo.count()).isEqualTo(10);
   }
 
   @Test
@@ -126,7 +126,7 @@ class RegisterUserServiceTest {
     assertThatThrownBy(() -> service.execute(dup))
       .isInstanceOf(EmailAlreadyRegisteredException.class);
     // repo size unchanged
-    assertThat(repo.size()).isEqualTo(1);
+    assertThat(repo.count()).isEqualTo(1);
   }
 
   /* S – Simple: DTO fields */
@@ -152,7 +152,7 @@ class RegisterUserServiceTest {
 
     @Override
     public long count() {
-      return 0;
+      return byEmail.size();
     }
 
     @Override
@@ -189,10 +189,6 @@ class RegisterUserServiceTest {
     @Override
     public boolean existsById(UserId userId) {
       return false;
-    }
-
-    /* helper */ int size() {
-      return byEmail.size();
     }
   }
 
