@@ -21,7 +21,7 @@ class UserTest {
     @Override public PasswordHash hash(PlainPassword plain) {
       return new PasswordHash("$2" + plain.clearText());
     }
-    @Override public boolean match(PlainPassword p, PasswordHash h) {
+    @Override public boolean matches(PlainPassword p, PasswordHash h) {
       return h.hash().equals("$2" + p.clearText());
     }
   }
