@@ -29,19 +29,6 @@ public class UserRegistered extends AbstractDomainEvent {
     return new UserRegistered(userId, email, occurredAt);
   }
 
-  /**
-   * Creates a new UserRegistered event with current timestamp.
-   *
-   * @deprecated Use {@link #createEvent(UserId, Email, Instant)} with explicit timestamp for deterministic behavior
-   * @param userId the ID of the user that was registered
-   * @param email the email of the registered user
-   * @return a new UserRegistered event
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public static UserRegistered createEvent(UserId userId, Email email) {
-    return createEvent(userId, email, Instant.now());
-  }
-
   public UserId getUserId() {
     return userId;
   }
