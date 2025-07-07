@@ -126,20 +126,6 @@ public final class Role extends AbstractEntity {
   }
 
   /**
-   * Removes a permission from this role using current timestamp.
-   *
-   * @deprecated Use {@link #removePermission(Permission, Instant)} with explicit timestamp for deterministic behavior
-   * @param permission the permission to remove
-   * @throws EntityRequiredFieldException if the permission is null
-   * @throws EmptyRoleException if removing this permission would leave the role with no permissions
-   * @throws PermissionNotFoundException if the permission is not assigned to this role
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void removePermission(Permission permission) {
-    removePermission(permission, Instant.now());
-  }
-
-  /**
    * Adds multiple permissions to this role at once.
    * Only permissions that are not already assigned will be added.
    * This method is a bulk operation equivalent to calling addPermission() for each permission,
@@ -200,19 +186,6 @@ public final class Role extends AbstractEntity {
     }
   }
 
-  /**
-   * Removes multiple permissions from this role at once using current timestamp.
-   *
-   * @deprecated Use {@link #removePermissions(Set, Instant)} with explicit timestamp for deterministic behavior
-   * @param permissions the set of permissions to remove
-   * @throws EntityRequiredFieldException if the permissions parameter is null
-   * @throws EmptyRoleException if removing these permissions would leave the role with no permissions
-   * @throws PermissionNotFoundException if any of the permissions is not assigned to this role
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void removePermissions(Set<Permission> permissions) {
-    removePermissions(permissions, Instant.now());
-  }
 
   /**
    * Checks if this role has a specific permission.
@@ -224,31 +197,6 @@ public final class Role extends AbstractEntity {
   public boolean hasPermission(Permission permission) {
     requireNonNull(permission, "permission");
     return permissions.contains(permission);
-  }
-
-  /**
-   * Adds a permission to this role using current timestamp.
-   *
-   * @deprecated Use {@link #addPermission(Permission, Instant)} with explicit timestamp for deterministic behavior
-   * @param permission the permission to add
-   * @throws EntityRequiredFieldException if the permission is null
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void addPermission(Permission permission) {
-    addPermission(permission, Instant.now());
-  }
-
-  /**
-   * Adds multiple permissions to this role at once using current timestamp.
-   *
-   * @deprecated Use {@link #addPermissions(Set, Instant)} with explicit timestamp for deterministic behavior
-   * @param permissions the set of permissions to add
-   * @throws EntityRequiredFieldException if the permissions parameter is null
-   * @throws EmptyRoleException if permissions set is empty
-   */
-  @Deprecated(since = "0.1.0", forRemoval = true)
-  public void addPermissions(Set<Permission> permissions) {
-    addPermissions(permissions, Instant.now());
   }
 
   @Override
