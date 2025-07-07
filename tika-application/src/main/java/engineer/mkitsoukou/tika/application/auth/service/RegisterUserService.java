@@ -3,6 +3,7 @@ import engineer.mkitsoukou.tika.application.auth.command.RegisterUserCommand;
 import engineer.mkitsoukou.tika.application.auth.dto.UserDto;
 import engineer.mkitsoukou.tika.application.auth.port.out.EventPublisherPort;
 import engineer.mkitsoukou.tika.application.auth.validator.PasswordPolicyValidator;
+import engineer.mkitsoukou.tika.application.shared.ClockPort;
 import engineer.mkitsoukou.tika.domain.exception.EmailAlreadyRegisteredException;
 import engineer.mkitsoukou.tika.domain.model.entity.User;
 import engineer.mkitsoukou.tika.domain.model.event.DomainEvent;
@@ -30,16 +31,19 @@ public class RegisterUserService implements RegisterUserUseCase {
   private final PasswordPolicyValidator passwordPolicy;
   private final PasswordHasher passwordHasher;
   private final EventPublisherPort events;
+  private final ClockPort clock;
 
 public RegisterUserService(
       UserRepository userRepo,
       PasswordPolicyValidator passwordPolicy,
       PasswordHasher passwordHasher,
-      EventPublisherPort events) {
+      EventPublisherPort events,
+      ClockPort clock) {
     this.userRepo = userRepo;
     this.passwordPolicy = passwordPolicy;
     this.passwordHasher = passwordHasher;
     this.events = events;
+    this.clock = clock;
   }
 
   @Override
@@ -55,7 +59,7 @@ public RegisterUserService(
       throw new EmailAlreadyRegisteredException(email.value());
     }
 
-    User user = User.register(email, plainPassword, passwordHasher);
+    User user = User.register(email, plainPassword, passwordHasher, clock.now());
     userRepo.save(user);
 
     List<DomainEvent> recorded = user.pullEvents();
