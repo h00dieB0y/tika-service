@@ -1,29 +1,24 @@
 package engineer.mkitsoukou.tika.domain.model.entity;
 
-import engineer.mkitsoukou.tika.domain.exception.EmptyRoleException;
-import engineer.mkitsoukou.tika.domain.exception.EntityRequiredFieldException;
-import engineer.mkitsoukou.tika.domain.exception.PermissionNotFoundException;
-import engineer.mkitsoukou.tika.domain.model.event.PermissionAdded;
-import engineer.mkitsoukou.tika.domain.model.event.PermissionRemoved;
-import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
-import engineer.mkitsoukou.tika.domain.model.valueobject.RoleName;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import engineer.mkitsoukou.tika.domain.exception.*;
+import engineer.mkitsoukou.tika.domain.model.event.*;
+import engineer.mkitsoukou.tika.domain.model.valueobject.*;
+import org.junit.jupiter.api.*;
 
+import java.time.Instant;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("Role Entity")
 class RoleTest {
 
+  private static final Instant NOW = Instant.EPOCH;
+
   private RoleFixtures fixtures;
 
   @BeforeEach
-  void prepareTestFixtures() {
+  void prepareFixtures() {
     fixtures = new RoleFixtures(
         new RoleName("ADMIN_ROLE"),
         new Permission("resource.read"),
@@ -33,366 +28,169 @@ class RoleTest {
     );
   }
 
-  // Test fixtures as records for immutability
   private record RoleFixtures(
       RoleName adminRoleName,
       Permission readPermission,
       Permission writePermission,
       Permission deletePermission,
-      Permission updatePermission) {
-  }
+      Permission updatePermission) {}
 
-  @Nested
-  @DisplayName("Role Creation")
+  // ───────────────────────── Role creation ─────────────────────────
+  @Nested @DisplayName("When creating role")
   class WhenCreatingRole {
-    @Test
-    @DisplayName("should succeed with valid name and permissions")
+    @Test @DisplayName("should succeed with valid name and permissions")
     void shouldSucceedWithValidNameAndPermissions() {
-      // Act
       var role = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-
-      // Assert
       assertThat(role.getRoleId()).isNotNull();
       assertThat(role.getRoleName()).isEqualTo(fixtures.adminRoleName());
-      assertThat(role.getPermissions())
-          .hasSize(1)
-          .contains(fixtures.readPermission());
+      assertThat(role.getPermissions()).containsExactly(fixtures.readPermission());
     }
 
-    @Test
-    @DisplayName("should reject creation with empty permissions")
+    @Test @DisplayName("should reject creation with empty permissions")
     void shouldRejectCreationWithEmptyPermissions() {
-      assertThatThrownBy(() ->
-          Role.createRole(fixtures.adminRoleName(), Set.of())
-      ).isInstanceOf(EmptyRoleException.class);
+      assertThatThrownBy(() -> Role.createRole(fixtures.adminRoleName(), Set.of()))
+          .isInstanceOf(EmptyRoleException.class);
     }
 
-    @Test
-    @DisplayName("should reject creation with null name")
+    @Test @DisplayName("should reject creation with null name")
     void shouldRejectCreationWithNullName() {
-      assertThatThrownBy(() ->
-          Role.createRole(null, Set.of(fixtures.readPermission()))
-      ).isInstanceOf(EntityRequiredFieldException.class);
+      assertThatThrownBy(() -> Role.createRole(null, Set.of(fixtures.readPermission())))
+          .isInstanceOf(EntityRequiredFieldException.class);
     }
 
-    @Test
-    @DisplayName("should reject creation with null permissions set")
+    @Test @DisplayName("should reject creation with null permissions set")
     void shouldRejectCreationWithNullPermissionsSet() {
-      assertThatThrownBy(() ->
-          Role.createRole(fixtures.adminRoleName(), null)
-      ).isInstanceOf(EntityRequiredFieldException.class);
+      assertThatThrownBy(() -> Role.createRole(fixtures.adminRoleName(), null))
+          .isInstanceOf(EntityRequiredFieldException.class);
     }
   }
 
-  @Nested
-  @DisplayName("Permission Management")
+  // ───────────────────── Permission management ────────────────────
+  @Nested @DisplayName("When managing permissions")
   class WhenManagingPermissions {
     private Role adminRole;
 
-    @BeforeEach
-    void prepareRoleWithBasicPermission() {
+    @BeforeEach void setUpRole() {
       adminRole = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-      adminRole.pullEvents(); // Clear creation events
+      adminRole.pullEvents();
     }
 
-    @Nested
-    @DisplayName("Single permission operations")
+    // ───── Single permission ops ─────
+    @Nested @DisplayName("Single permission operations")
     class SinglePermissionOperations {
-      @Test
-      @DisplayName("should add permission and emit PermissionAdded event")
+      @Test @DisplayName("should add permission and emit PermissionAdded event")
       void shouldAddPermissionAndEmitEvent() {
-        // Act
-        adminRole.addPermission(fixtures.writePermission());
-
-        // Assert permission added
+        adminRole.addPermission(fixtures.writePermission(), NOW);
         assertThat(adminRole.hasPermission(fixtures.writePermission())).isTrue();
-
-        // Assert event
-        var events = adminRole.pullEvents();
-        assertThat(events).hasSize(1);
-
-        assertThat(events.getFirst())
-            .isInstanceOf(PermissionAdded.class)
-            .extracting(PermissionAdded.class::cast)
-            .returns(adminRole.getRoleId(), PermissionAdded::getRoleId)
-            .returns(fixtures.writePermission(), PermissionAdded::getPermission);
+        assertThat(adminRole.pullEvents()).singleElement().isInstanceOf(PermissionAdded.class);
       }
 
-      @Test
-      @DisplayName("should ignore adding duplicate permission")
+      @Test @DisplayName("should ignore adding duplicate permission")
       void shouldIgnoreAddingDuplicatePermission() {
-        // Act
-        adminRole.addPermission(fixtures.readPermission());
-
-        // Assert
-        assertThat(adminRole.hasPermission(fixtures.readPermission())).isTrue();
+        adminRole.addPermission(fixtures.readPermission(), NOW);
         assertThat(adminRole.pullEvents()).isEmpty();
       }
 
-      @Test
-      @DisplayName("should remove permission and emit PermissionRemoved event")
+      @Test @DisplayName("should remove permission and emit PermissionRemoved event")
       void shouldRemovePermissionAndEmitEvent() {
-        // Arrange
-        adminRole.addPermission(fixtures.writePermission());
-        adminRole.pullEvents(); // Clear add event
-
-        // Act
-        adminRole.removePermission(fixtures.writePermission());
-
-        // Assert permission removed
+        adminRole.addPermission(fixtures.writePermission(), NOW);
+        adminRole.pullEvents();
+        adminRole.removePermission(fixtures.writePermission(), NOW);
         assertThat(adminRole.hasPermission(fixtures.writePermission())).isFalse();
-
-        // Assert event
-        var events = adminRole.pullEvents();
-        assertThat(events).hasSize(1);
-
-        assertThat(events.getFirst())
-            .isInstanceOf(PermissionRemoved.class)
-            .extracting(PermissionRemoved.class::cast)
-            .returns(adminRole.getRoleId(), PermissionRemoved::getRoleId)
-            .returns(fixtures.writePermission(), PermissionRemoved::getPermission);
+        assertThat(adminRole.pullEvents()).singleElement().isInstanceOf(PermissionRemoved.class);
       }
 
-      @Test
-      @DisplayName("should reject removing last permission")
+      @Test @DisplayName("should reject removing last permission")
       void shouldRejectRemovingLastPermission() {
-        assertThatThrownBy(() ->
-            adminRole.removePermission(fixtures.readPermission())
-        ).isInstanceOf(EmptyRoleException.class);
+        assertThatThrownBy(() -> adminRole.removePermission(fixtures.readPermission(), NOW))
+            .isInstanceOf(EmptyRoleException.class);
       }
 
-      @Test
-      @DisplayName("should reject removing non-existent permission")
+      @Test @DisplayName("should reject removing non-existent permission")
       void shouldRejectRemovingNonexistentPermission() {
-        var nonExistentPermission = new Permission("non.existent");
-
-        assertThatThrownBy(() ->
-            adminRole.removePermission(nonExistentPermission)
-        ).isInstanceOf(PermissionNotFoundException.class);
-      }
-
-      @Test
-      @DisplayName("should reject null permission during addition")
-      void shouldRejectNullPermissionDuringAddition() {
-        assertThatThrownBy(() ->
-            adminRole.addPermission(null)
-        ).isInstanceOf(EntityRequiredFieldException.class);
-      }
-
-      @Test
-      @DisplayName("should reject null permission during removal")
-      void shouldRejectNullPermissionDuringRemoval() {
-        assertThatThrownBy(() ->
-            adminRole.removePermission(null)
-        ).isInstanceOf(EntityRequiredFieldException.class);
-      }
-
-      @Test
-      @DisplayName("should reject null permission during permission check")
-      void shouldRejectNullPermissionDuringPermissionCheck() {
-        assertThatThrownBy(() ->
-            adminRole.hasPermission(null)
-        ).isInstanceOf(EntityRequiredFieldException.class);
+        assertThatThrownBy(() -> adminRole.removePermission(fixtures.deletePermission(), NOW))
+            .isInstanceOf(PermissionNotFoundException.class);
       }
     }
 
-    @Nested
-    @DisplayName("Bulk permission operations")
+    // ───── Bulk permission ops ─────
+    @Nested @DisplayName("Bulk permission operations")
     class BulkPermissionOperations {
-      @Test
-      @DisplayName("should add multiple permissions and emit events")
-      void shouldAddMultiplePermissionsAndEmitEvents() {
-        // Arrange
-        var permissionsToAdd = Set.of(fixtures.writePermission(), fixtures.deletePermission());
-
-        // Act
-        adminRole.addPermissions(permissionsToAdd);
-
-        // Assert permissions added
-        assertThat(adminRole.hasPermission(fixtures.writePermission())).isTrue();
-        assertThat(adminRole.hasPermission(fixtures.deletePermission())).isTrue();
-
-        // Assert events
+      @Test @DisplayName("should add multiple permissions and emit events for new ones")
+      void shouldAddMultiplePermissionsAndEmitEventsForNewOnes() {
+        adminRole.addPermissions(Set.of(fixtures.readPermission(), fixtures.writePermission(), fixtures.deletePermission()), NOW);
         var events = adminRole.pullEvents();
-        assertThat(events)
-            .hasSize(2)
-            .allMatch(PermissionAdded.class::isInstance);
-
-        // Verify each permission has an event
-        assertThat(events)
-            .extracting(event -> ((PermissionAdded) event).getPermission())
-            .containsExactlyInAnyOrder(fixtures.writePermission(), fixtures.deletePermission());
+        assertThat(events).hasSize(2).allMatch(PermissionAdded.class::isInstance);
       }
 
-      @Test
-      @DisplayName("should only emit events for new permissions when adding mix of new and existing")
-      void shouldOnlyEmitEventsForNewPermissionsWhenAddingMixOfNewAndExisting() {
-        // Arrange
-        var permissionsToAdd = Set.of(fixtures.readPermission(), fixtures.writePermission());
-
-        // Act
-        adminRole.addPermissions(permissionsToAdd);
-
-        // Assert all permissions exist
-        assertThat(adminRole.hasPermission(fixtures.readPermission())).isTrue();
-        assertThat(adminRole.hasPermission(fixtures.writePermission())).isTrue();
-
-        // Assert only one event for the new permission
-        var events = adminRole.pullEvents();
-        assertThat(events).hasSize(1);
-
-        assertThat(events.getFirst())
-            .isInstanceOf(PermissionAdded.class)
-            .extracting(PermissionAdded.class::cast)
-            .returns(fixtures.writePermission(), PermissionAdded::getPermission);
-      }
-
-      @Test
-      @DisplayName("should reject null permissions set during bulk addition")
-      void shouldRejectNullPermissionsSetDuringBulkAddition() {
-        assertThatThrownBy(() ->
-            adminRole.addPermissions(null)
-        ).isInstanceOf(EntityRequiredFieldException.class);
-      }
-
-      @Test
-      @DisplayName("should remove multiple permissions and emit events")
+      @Test @DisplayName("should remove multiple permissions and emit corresponding events")
       void shouldRemoveMultiplePermissionsAndEmitEvents() {
-        // Arrange - add additional permissions
-        adminRole.addPermission(fixtures.writePermission());
-        adminRole.addPermission(fixtures.deletePermission());
-        adminRole.pullEvents(); // Clear add events
-
-        // Act
-        adminRole.removePermissions(Set.of(fixtures.writePermission(), fixtures.deletePermission()));
-
-        // Assert permissions removed
+        adminRole.addPermission(fixtures.writePermission(), NOW);
+        adminRole.addPermission(fixtures.deletePermission(), NOW);
+        adminRole.pullEvents();
+        adminRole.removePermissions(Set.of(fixtures.writePermission(), fixtures.deletePermission()), NOW);
         assertThat(adminRole.hasPermission(fixtures.writePermission())).isFalse();
-        assertThat(adminRole.hasPermission(fixtures.deletePermission())).isFalse();
-        assertThat(adminRole.hasPermission(fixtures.readPermission())).isTrue(); // Original permission remains
-
-        // Assert events
-        var events = adminRole.pullEvents();
-        assertThat(events)
-            .hasSize(2)
-            .allMatch(PermissionRemoved.class::isInstance);
-
-        // Verify each permission has a removal event
-        assertThat(events)
-            .extracting(event -> ((PermissionRemoved) event).getPermission())
-            .containsExactlyInAnyOrder(fixtures.writePermission(), fixtures.deletePermission());
+        assertThat(adminRole.pullEvents()).hasSize(2).allMatch(PermissionRemoved.class::isInstance);
       }
 
-      @Test
-      @DisplayName("should reject removing all permissions")
+      @Test @DisplayName("should reject removing all permissions")
       void shouldRejectRemovingAllPermissions() {
-        // Arrange - add write permission
-        adminRole.addPermission(fixtures.writePermission());
-        adminRole.pullEvents(); // Clear add event
-
-        // Act & Assert
-        assertThatThrownBy(() ->
-            adminRole.removePermissions(Set.of(fixtures.readPermission(), fixtures.writePermission()))
-        ).isInstanceOf(EmptyRoleException.class);
-
-        // Verify no permissions were removed
-        assertThat(adminRole.hasPermission(fixtures.readPermission())).isTrue();
-        assertThat(adminRole.hasPermission(fixtures.writePermission())).isTrue();
+        adminRole.addPermission(fixtures.writePermission(), NOW);
+        adminRole.pullEvents();
+        assertThatThrownBy(() -> adminRole.removePermissions(Set.of(fixtures.readPermission(), fixtures.writePermission()), NOW))
+            .isInstanceOf(EmptyRoleException.class);
       }
 
-      @Test
-      @DisplayName("should reject removing non-existent permissions in bulk")
+      @Test @DisplayName("should reject removing non-existent permissions in bulk")
       void shouldRejectRemovingNonexistentPermissionsInBulk() {
-        // Act & Assert
-        assertThatThrownBy(() ->
-            adminRole.removePermissions(Set.of(fixtures.writePermission(), fixtures.deletePermission()))
-        ).isInstanceOf(PermissionNotFoundException.class);
-
-        // Verify the role remains unchanged
-        assertThat(adminRole.getPermissions()).hasSize(1);
-        assertThat(adminRole.hasPermission(fixtures.readPermission())).isTrue();
+        assertThatThrownBy(() -> adminRole.removePermissions(Set.of(fixtures.writePermission()), NOW))
+            .isInstanceOf(PermissionNotFoundException.class);
       }
 
-      @Test
-      @DisplayName("should reject null permissions set during bulk removal")
-      void shouldRejectNullPermissionsSetDuringBulkRemoval() {
-        assertThatThrownBy(() ->
-            adminRole.removePermissions(null)
-        ).isInstanceOf(EntityRequiredFieldException.class);
+      @Test @DisplayName("should reject null set during bulk add/remove")
+      void shouldRejectNullSetDuringBulkAddRemove() {
+        assertThatThrownBy(() -> adminRole.addPermissions(null, NOW)).isInstanceOf(EntityRequiredFieldException.class);
+        assertThatThrownBy(() -> adminRole.removePermissions(null, NOW)).isInstanceOf(EntityRequiredFieldException.class);
       }
     }
   }
 
-  @Nested
-  @DisplayName("Role Invariants")
+  // ───────────────────── Role invariants ───────────────────────
+  @Nested @DisplayName("Role invariants")
   class RoleInvariants {
-    @Test
-    @DisplayName("should provide unmodifiable permissions collection")
+    @Test @DisplayName("should provide unmodifiable permissions collection")
     void shouldProvideUnmodifiablePermissionsCollection() {
-      // Arrange
       var role = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-
-      // Act
-      var permissions = role.getPermissions();
-
-      // Assert
-      assertThatThrownBy(() ->
-          permissions.add(fixtures.writePermission())
-      ).isInstanceOf(UnsupportedOperationException.class);
+      assertThatThrownBy(() -> role.getPermissions().add(fixtures.writePermission()))
+          .isInstanceOf(UnsupportedOperationException.class);
     }
 
-    @Nested
-    @DisplayName("Object contract")
+    @Nested @DisplayName("Object contract")
     class ObjectContract {
-      @Test
-      @DisplayName("should compare roles based only on roleId")
-      void shouldCompareRolesBasedOnlyOnRoleId() {
-        // Arrange
-        var role1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-        var role2 = Role.createRole(fixtures.adminRoleName(),
-            Set.of(fixtures.readPermission(), fixtures.writePermission()));
-        var role3 = Role.createRole(new RoleName("DIFFERENT_ROLE"), Set.of(fixtures.readPermission()));
-
-        assertThat(role1)
-            .isNotEqualTo(role2)
-            .isNotEqualTo(role3)
-            .isEqualTo(role1)
-            .isNotNull();
+      @Test @DisplayName("should compare roles by roleId only")
+      void shouldCompareRolesByRoleIdOnly() {
+        var r1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        var r2 = r1;
+        var r3 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        assertThat(r1).isEqualTo(r2).isNotEqualTo(r3);
       }
 
-      @Test
-      @DisplayName("should have consistent hashCode based on roleId")
-      void shouldHaveConsistentHashCodeBasedOnRoleId() {
-        // Arrange
-        var role1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-        var role1Copy = role1; // Same reference should have same hashCode
-
-        // Act & Assert
-        assertThat(role1)
-            .hasSameHashCodeAs(role1)
-            .hasSameHashCodeAs(role1Copy);
-
-        // Different roles should have different hashCodes (high probability)
-        var role2 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
-        assertThat(role1.hashCode()).isNotEqualTo(role2.hashCode());
+      @Test @DisplayName("should produce consistent hashCode based on roleId")
+      void shouldProduceConsistentHashCodeBasedOnRoleId() {
+        var r1 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        var r2 = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission()));
+        assertThat(r1.hashCode()).isEqualTo(r1.hashCode());
+        assertThat(r1.hashCode()).isNotEqualTo(r2.hashCode());
       }
 
-      @Test
-      @DisplayName("should provide a descriptive toString representation")
-      void shouldProvideDescriptiveToStringRepresentation() {
-        // Arrange
-        var role = Role.createRole(fixtures.adminRoleName(),
-            Set.of(fixtures.readPermission(), fixtures.writePermission()));
-
-        // Act
-        var stringRepresentation = role.toString();
-
-        // Assert
-        assertThat(stringRepresentation)
+      @Test @DisplayName("should produce descriptive toString representation")
+      void shouldProduceDescriptiveToStringRepresentation() {
+        var role = Role.createRole(fixtures.adminRoleName(), Set.of(fixtures.readPermission(), fixtures.writePermission()));
+        assertThat(role.toString())
             .contains("Role")
             .contains(role.getRoleId().toString())
             .contains(fixtures.adminRoleName().toString())
-            .contains("permissionsCount=2"); // Should mention the count of permissions
+            .contains("permissionsCount=2");
       }
     }
   }

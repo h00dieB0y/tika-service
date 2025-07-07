@@ -3,6 +3,7 @@ package engineer.mkitsoukou.tika.domain.model.event;
 import engineer.mkitsoukou.tika.domain.model.valueobject.Email;
 import engineer.mkitsoukou.tika.domain.model.valueobject.UserId;
 
+import java.time.Instant;
 import java.util.Objects;
 
 public class UserRegistered extends AbstractDomainEvent {
@@ -10,8 +11,8 @@ public class UserRegistered extends AbstractDomainEvent {
   private final UserId userId;
   private final Email email;
 
-  public UserRegistered(UserId userId, Email email) {
-    super();
+  public UserRegistered(UserId userId, Email email, Instant occurredAt) {
+    super(occurredAt);
     this.userId = requireNonNull(userId, "userId");
     this.email = requireNonNull(email, "email");
   }
@@ -21,10 +22,24 @@ public class UserRegistered extends AbstractDomainEvent {
    *
    * @param userId the ID of the user that was registered
    * @param email the email of the registered user
+   * @param occurredAt the timestamp when the event occurred
    * @return a new UserRegistered event
    */
+  public static UserRegistered createEvent(UserId userId, Email email, Instant occurredAt) {
+    return new UserRegistered(userId, email, occurredAt);
+  }
+
+  /**
+   * Creates a new UserRegistered event with current timestamp.
+   *
+   * @deprecated Use {@link #createEvent(UserId, Email, Instant)} with explicit timestamp for deterministic behavior
+   * @param userId the ID of the user that was registered
+   * @param email the email of the registered user
+   * @return a new UserRegistered event
+   */
+  @Deprecated(since = "0.1.0", forRemoval = true)
   public static UserRegistered createEvent(UserId userId, Email email) {
-    return new UserRegistered(userId, email);
+    return createEvent(userId, email, Instant.now());
   }
 
   public UserId getUserId() {

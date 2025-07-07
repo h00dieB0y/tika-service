@@ -2,6 +2,7 @@ package engineer.mkitsoukou.tika.domain.model.event;
 
 import engineer.mkitsoukou.tika.domain.model.valueobject.Permission;
 import engineer.mkitsoukou.tika.domain.model.valueobject.RoleId;
+import java.time.Instant;
 import java.util.Objects;
 
 public class PermissionAdded extends AbstractDomainEvent {
@@ -9,8 +10,8 @@ public class PermissionAdded extends AbstractDomainEvent {
   private final RoleId roleId;
   private final Permission permission;
 
-  public PermissionAdded(RoleId roleId, Permission permission) {
-    super();
+  public PermissionAdded(RoleId roleId, Permission permission, Instant occurredAt) {
+    super(occurredAt);
     this.roleId = requireNonNull(roleId, "roleId");
     this.permission = requireNonNull(permission, "permission");
   }
@@ -20,10 +21,24 @@ public class PermissionAdded extends AbstractDomainEvent {
    *
    * @param roleId the ID of the role to which the permission was added
    * @param permission the permission that was added
+   * @param occurredAt the timestamp when the event occurred
    * @return a new PermissionAdded event
    */
+  public static PermissionAdded createEvent(RoleId roleId, Permission permission, Instant occurredAt) {
+    return new PermissionAdded(roleId, permission, occurredAt);
+  }
+
+  /**
+   * Creates a new PermissionAdded event with current timestamp.
+   *
+   * @deprecated Use {@link #createEvent(RoleId, Permission, Instant)} with explicit timestamp for deterministic behavior
+   * @param roleId the ID of the role to which the permission was added
+   * @param permission the permission that was added
+   * @return a new PermissionAdded event
+   */
+  @Deprecated(since = "0.1.0", forRemoval = true)
   public static PermissionAdded createEvent(RoleId roleId, Permission permission) {
-    return new PermissionAdded(roleId, permission);
+    return createEvent(roleId, permission, Instant.now());
   }
 
   public RoleId getRoleId() {
