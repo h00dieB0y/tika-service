@@ -5,6 +5,7 @@ import engineer.mkitsoukou.tika.application.auth.dto.AuthTokensDto;
 import engineer.mkitsoukou.tika.application.auth.exception.InvalidCredentialsException;
 import engineer.mkitsoukou.tika.application.auth.exception.TooManyAttemptsException;
 import engineer.mkitsoukou.tika.application.auth.exception.UserInactiveException;
+import engineer.mkitsoukou.tika.application.auth.model.AuthSubject;
 import engineer.mkitsoukou.tika.application.auth.port.out.JwtIssuerPort;
 import engineer.mkitsoukou.tika.application.auth.port.out.RateLimiterPort;
 import engineer.mkitsoukou.tika.application.auth.port.out.TokenBlacklistPort;
@@ -13,14 +14,12 @@ import engineer.mkitsoukou.tika.domain.model.entity.User;
 import engineer.mkitsoukou.tika.domain.model.valueobject.*;
 import engineer.mkitsoukou.tika.domain.repository.UserRepository;
 import engineer.mkitsoukou.tika.domain.service.PasswordHasher;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -82,14 +81,15 @@ class StubHasher implements PasswordHasher {
 }
 
 class StubJwtIssuer implements JwtIssuerPort {
-  @Override public AuthTokensDto issueTokens(User user, Instant now) {
-    return new AuthTokensDto("AT-" + user.getId(), "RT-" + user.getId(),
+  @Override public AuthTokensDto issueTokens(AuthSubject subject, Instant now) {
+    return new AuthTokensDto("AT-" + subject.userId(), "RT-" + subject.userId(),
       now.plus(Duration.ofMinutes(15)));
   }
 }
 
 class NoOpBlacklist implements TokenBlacklistPort {
   @Override public boolean isBlacklisted(String jti) { return false; }
+  @Override public void blacklist(String jti) { /* no-op */ }
 }
 
 class CountingRateLimiter implements RateLimiterPort {
@@ -109,7 +109,7 @@ class CountingRateLimiter implements RateLimiterPort {
    LoginUserServiceTest
    -------------------------------------------------------------------- */
 
-public class LoginUserServiceTest {
+class LoginUserServiceTest {
 
   private InMemUserRepo repo;
   private CountingRateLimiter limiter;
@@ -181,9 +181,13 @@ public class LoginUserServiceTest {
     LoginUserCommand cmd = new LoginUserCommand("active@example.com", STRONG_PWD);
     service.execute(cmd);
 
-    ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+    ArgumentCaptor<AuthSubject> captor = ArgumentCaptor.forClass(AuthSubject.class);
     verify(issuer).issueTokens(captor.capture(), eq(clock.now()));
-    assertThat(captor.getValue().getEmail().value()).isEqualTo("active@example.com");
+    AuthSubject capturedSubject = captor.getValue();
+
+    // Verify the captured AuthSubject contains the expected user ID
+    User activeUser = repo.findByEmail(new Email("active@example.com")).orElseThrow();
+    assertThat(capturedSubject.userId()).isEqualTo(activeUser.getId().value().toString());
   }
 
   @Test
@@ -208,13 +212,16 @@ public class LoginUserServiceTest {
   void blacklistedTokenShouldThrowInvalidCredentials() {
 
     JwtIssuerPort blkIssuer = new JwtIssuerPort() {
-      @Override public AuthTokensDto issueTokens(User user, Instant now) {
-        return new AuthTokensDto("AT-BLK", "RT-"+user.getId(), now.plus(Duration.ofMinutes(15)));
+      @Override public AuthTokensDto issueTokens(AuthSubject subject, Instant now) {
+        return new AuthTokensDto("AT-BLK", "RT-"+subject.userId(), now.plus(Duration.ofMinutes(15)));
       }
     };
 
     /* Fake blacklist flags that specific token as revoked  */
-    TokenBlacklistPort blkList = "AT-BLK"::equals;
+    TokenBlacklistPort blkList = new TokenBlacklistPort() {
+      @Override public boolean isBlacklisted(String jti) { return "AT-BLK".equals(jti); }
+      @Override public void blacklist(String jti) { /* no-op */ }
+    };
 
     LoginUserService svc = new LoginUserService(
       repo,
