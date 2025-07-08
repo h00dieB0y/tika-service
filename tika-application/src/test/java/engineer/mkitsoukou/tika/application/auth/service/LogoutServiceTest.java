@@ -41,8 +41,8 @@ class LogoutServiceTest {
     /* Stub validator – validates AT and returns claims */
     JwtValidatorPort validator = mock(JwtValidatorPort.class);
     when(validator.validateAccessToken(AT))
-      .thenReturn(new JwtClaims(USER_ID, JTI, Instant.now(),
-        Instant.now().plusSeconds(900), Set.of()));
+      .thenReturn(new JwtClaims(USER_ID, JTI, NOW,
+        NOW.plusSeconds(900), Set.of()));
     when(validator.validateAccessToken("expired"))
       .thenThrow(new InvalidCredentialsException());
     when(validator.validateAccessToken(""))
