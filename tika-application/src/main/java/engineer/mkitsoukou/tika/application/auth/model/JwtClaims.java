@@ -9,4 +9,8 @@ public record JwtClaims(
   Instant issuedAt,
   Instant expiresAt,
   Set<String> roles     // copied from JWT «roles» claim
-) {}
+) {
+    public JwtClaims {
+        roles = roles == null ? Set.of() : Set.copyOf(roles);
+    }
+}
