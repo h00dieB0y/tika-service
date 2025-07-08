@@ -4,6 +4,7 @@ import engineer.mkitsoukou.tika.application.shared.ClockPort;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Production implementation of {@link ClockPort} using {@link Clock#systemUTC()}.
@@ -17,7 +18,7 @@ public class SystemClockAdapter implements ClockPort {
   }
 
   SystemClockAdapter(Clock clock) {
-    this.clock = clock;
+    this.clock = Objects.requireNonNull(clock, "Clock must not be null");
   }
 
   @Override
