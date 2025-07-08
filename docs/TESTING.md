@@ -93,7 +93,7 @@ asGuestWhenAccessingPrivateResourceShouldReceiveForbidden()
 * **Test Profiles** – Separate configurations for different test types:
   * `mvn test` → Fast unit tests (no external dependencies)
   * `mvn verify -Pintegration` → Integration tests with real dependencies
-  * Consider using Testcontainers for database/service dependenciescument describes the conventions, tools, and heuristics we use to test the codebase effectively and maintainably.
+  * Consider using Testcontainers for database/service dependencies. This document describes the conventions, tools, and heuristics we use to test the codebase effectively and maintainably.
 
 ---
 
