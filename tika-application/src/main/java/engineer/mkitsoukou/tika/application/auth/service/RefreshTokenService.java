@@ -38,7 +38,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
     // Validate the refresh token
     JwtClaims claims = validator.validateRefreshToken(command.refreshToken());
 
-    // Check if the refresh token is still known and not blacklisted
+    // Check if the refresh token is still valid in the store
     if (!rtStore.isValid(claims.userId(), command.refreshToken())) {
       throw new InvalidCredentialsException();
     }
