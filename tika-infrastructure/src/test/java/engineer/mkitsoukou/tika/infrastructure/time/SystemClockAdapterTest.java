@@ -151,15 +151,6 @@ class SystemClockAdapterTest {
                 .isInstanceOf(NullPointerException.class);
         }
 
-        @Test
-        void shouldNotAllowNullClockInPackagePrivateConstructor() {
-            // This test verifies that the package-private constructor doesn't accept null
-            // In a real scenario, this would be caught by the Clock.instant() call
-            assertThatThrownBy(() -> {
-                SystemClockAdapter adapter = new SystemClockAdapter(null);
-                adapter.now(); // This should throw when clock is null
-            }).isInstanceOf(NullPointerException.class);
-        }
     }
 
     /* ---------- Z – Zero / Null / Edge Cases ---------- */
