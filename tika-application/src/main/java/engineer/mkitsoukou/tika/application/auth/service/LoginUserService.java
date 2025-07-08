@@ -4,6 +4,7 @@ import engineer.mkitsoukou.tika.application.auth.command.LoginUserCommand;
 import engineer.mkitsoukou.tika.application.auth.dto.AuthTokensDto;
 import engineer.mkitsoukou.tika.application.auth.exception.InvalidCredentialsException;
 import engineer.mkitsoukou.tika.application.auth.exception.UserInactiveException;
+import engineer.mkitsoukou.tika.application.auth.model.AuthSubject;
 import engineer.mkitsoukou.tika.application.auth.port.in.LoginUserUseCase;
 import engineer.mkitsoukou.tika.application.auth.port.out.JwtIssuerPort;
 import engineer.mkitsoukou.tika.application.auth.port.out.RateLimiterPort;
@@ -15,6 +16,7 @@ import engineer.mkitsoukou.tika.domain.model.valueobject.PlainPassword;
 import engineer.mkitsoukou.tika.domain.repository.UserRepository;
 import engineer.mkitsoukou.tika.domain.service.PasswordHasher;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class LoginUserService implements LoginUserUseCase {
   private final UserRepository userRepo;
@@ -60,7 +62,14 @@ public class LoginUserService implements LoginUserUseCase {
       throw new InvalidCredentialsException();
     }
 
-    AuthTokensDto tokens = jwtIssuer.issueTokens(user, clock.now());
+    AuthSubject subject = new AuthSubject(
+        user.getId().value().toString(),
+        user.getRoles().stream()
+          .map(r -> r.getRoleId().value().toString())
+          .collect(Collectors.toSet()));
+
+    AuthTokensDto tokens = jwtIssuer.issueTokens(subject, clock.now());
+
 
     if (blacklist.isBlacklisted(tokens.accessToken())) {
       throw new InvalidCredentialsException();
