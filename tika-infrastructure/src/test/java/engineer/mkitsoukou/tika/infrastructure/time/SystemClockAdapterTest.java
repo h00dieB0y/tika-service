@@ -221,20 +221,6 @@ class SystemClockAdapterTest {
                 assertThat(result).isNotNull();
             }
         }
-
-        @Test
-        void shouldExecuteQuickly() {
-            SystemClockAdapter adapter = new SystemClockAdapter();
-
-            long startTime = System.nanoTime();
-            for (int i = 0; i < 1000; i++) {
-                adapter.now();
-            }
-            long duration = System.nanoTime() - startTime;
-
-            // Log the duration for informational purposes
-            System.out.println("Execution time for 1000 calls: " + duration + " nanoseconds.");
-        }
     }
 
     /* ---------- Constructor Variants ---------- */
